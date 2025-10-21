@@ -1,0 +1,3 @@
+[submodule "Smart-Contract"]
+	path = Smart-Contract
+	url = https://github.com/yeheskieltame/Smart-Contract.git
