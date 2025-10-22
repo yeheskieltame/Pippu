@@ -1,3 +1,9 @@
 [submodule "Smart-Contract/lib/openzeppelin-contracts"]
 	path = Smart-Contract/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "Pippu-Contract/lib/forge-std"]
+	path = Pippu-Contract/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "Pippu-Contract/lib/openzeppelin-contracts"]
+	path = Pippu-Contract/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
