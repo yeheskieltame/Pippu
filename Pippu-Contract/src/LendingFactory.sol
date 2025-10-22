@@ -3,9 +3,12 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./LiquidityPool.sol";
 
 contract LendingFactory is Ownable(msg.sender), ReentrancyGuard {
+    using SafeERC20 for IERC20;
     struct PoolInfo {
         address poolAddress;
         address borrower;
@@ -114,17 +117,28 @@ contract LendingFactory is Ownable(msg.sender), ReentrancyGuard {
 
     function fundPool(address pool, uint256 amount) external nonReentrant validPool(pool) {
         LiquidityPool liquidityPool = LiquidityPool(pool);
-        liquidityPool.provideLiquidity(amount);
+
+        // Catat liquidity di pool (pool akan melakukan transfer langsung)
+        liquidityPool.provideLiquidityFromFactory(msg.sender, amount);
     }
 
     function withdrawFromPool(address pool, uint256 amount) external nonReentrant validPool(pool) {
         LiquidityPool liquidityPool = LiquidityPool(pool);
-        liquidityPool.withdrawLiquidity(amount);
+        liquidityPool.withdrawLiquidityFromFactory(msg.sender, amount);
     }
 
     function depositCollateral(address pool, uint256 amount) external nonReentrant validPool(pool) {
         LiquidityPool liquidityPool = LiquidityPool(pool);
-        liquidityPool.depositCollateral(amount);
+
+        // Get collateral asset dari pool info
+        address collateralAsset = poolInfos[pool].collateralAsset;
+
+        // Transfer dari msg.sender ke factory, lalu factory transfer ke pool
+        IERC20(collateralAsset).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(collateralAsset).safeTransfer(address(liquidityPool), amount);
+
+        // Catat collateral di pool
+        liquidityPool.depositCollateralFromFactory(amount);
     }
 
     function disburseLoan(address pool) external nonReentrant validPool(pool) {

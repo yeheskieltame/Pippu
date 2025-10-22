@@ -42,7 +42,7 @@ contract LiquidityPool is Ownable, ReentrancyGuard {
     event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
     modifier onlyBorrower() {
-        require(msg.sender == borrower, "Only borrower");
+        require(msg.sender == borrower || msg.sender == owner(), "Only borrower or owner");
         _;
     }
 
@@ -77,6 +77,24 @@ contract LiquidityPool is Ownable, ReentrancyGuard {
         emit LiquidityProvided(msg.sender, amount, shares);
     }
 
+    function provideLiquidityFromFactory(address provider, uint256 amount) external nonReentrant {
+        require(msg.sender == owner(), "Only factory");
+        require(amount > 0, "Amount must be > 0");
+
+        uint256 shares = totalShares == 0 ? amount : (amount * totalShares) / totalLiquidity;
+        require(shares > 0, "Shares must be > 0");
+
+        userShares[provider] += shares;
+        userDeposits[provider] += amount;
+        totalLiquidity += amount;
+        totalShares += shares;
+
+        // Transfer langsung dari provider ke pool
+        loanAsset.safeTransferFrom(provider, address(this), amount);
+
+        emit LiquidityProvided(provider, amount, shares);
+    }
+
     function withdrawLiquidity(uint256 amount) external nonReentrant {
         require(userDeposits[msg.sender] >= amount, "Insufficient balance");
         require(totalLiquidity - amount >= totalLoaned, "Would break solvency");
@@ -93,12 +111,40 @@ contract LiquidityPool is Ownable, ReentrancyGuard {
         emit LiquidityWithdrawn(msg.sender, amount, shares);
     }
 
+    function withdrawLiquidityFromFactory(address provider, uint256 amount) external nonReentrant {
+        require(msg.sender == owner(), "Only factory");
+        require(userDeposits[provider] >= amount, "Insufficient balance");
+
+        // Check actual available liquidity instead of tracked liquidity
+        uint256 availableLiquidity = loanAsset.balanceOf(address(this));
+        require(availableLiquidity >= amount, "Insufficient available liquidity");
+
+        uint256 shares = (amount * userShares[provider]) / userDeposits[provider];
+
+        userDeposits[provider] -= amount;
+        userShares[provider] -= shares;
+        totalLiquidity -= amount;
+        totalShares -= shares;
+
+        loanAsset.safeTransfer(provider, amount);
+
+        emit LiquidityWithdrawn(provider, amount, shares);
+    }
+
     function depositCollateral(uint256 amount) external onlyBorrower nonReentrant {
         require(!loanActive, "Loan already active");
         require(amount > 0, "Amount must be > 0");
 
         totalCollateral += amount;
         collateralAsset.safeTransferFrom(msg.sender, address(this), amount);
+    }
+
+    function depositCollateralFromFactory(uint256 amount) external nonReentrant {
+        require(msg.sender == owner(), "Only factory");
+        require(!loanActive, "Loan already active");
+        require(amount > 0, "Amount must be > 0");
+
+        totalCollateral += amount;
     }
 
     function disburseLoan() external onlyBorrower nonReentrant {
@@ -113,6 +159,7 @@ contract LiquidityPool is Ownable, ReentrancyGuard {
         loanStartTime = block.timestamp;
         loanEndTime = block.timestamp + loanDuration;
         totalLoaned += loanAmount;
+        totalLiquidity -= loanAmount;
 
         loanAsset.safeTransfer(borrower, loanAmount);
 
@@ -130,6 +177,7 @@ contract LiquidityPool is Ownable, ReentrancyGuard {
 
         loanActive = false;
         totalLoaned -= loanAmount;
+        totalLiquidity += loanAmount;
 
         collateralAsset.safeTransfer(borrower, totalCollateral);
 
