@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 
 import { Analytics } from "@vercel/analytics/next"
+import { OnchainProvider } from "@/lib/providers"
 import "./globals.css"
 
 import { Fredoka, Caveat, Geist as V0_Font_Geist, Geist_Mono as V0_Font_Geist_Mono, Source_Serif_4 as V0_Font_Source_Serif_4 } from 'next/font/google'
@@ -39,7 +40,9 @@ export default function RootLayout({
       <body
         className={`${fredoka.variable} ${caveat.variable} font-sans antialiased bg-gradient-to-b from-blue-50 to-pink-50`}
       >
-        {children}
+        <OnchainProvider>
+          {children}
+        </OnchainProvider>
         <Analytics />
       </body>
     </html>
