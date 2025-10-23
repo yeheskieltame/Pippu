@@ -24,10 +24,70 @@ const caveat = Caveat({
   weight: ["700"],
 })
 
-export const metadata: Metadata = {
-  title: "Pippu - DeFi Lending",
-  description: "Cute and friendly DeFi lending on Farcaster",
-  generator: "v0.app",
+export async function generateMetadata(): Promise<Metadata> {
+  const baseUrl = "https://www.pippu.xyz"
+
+  return {
+    title: "Pippu - DeFi Lending Protocol",
+    description: "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+    keywords: ["DeFi", "lending", "borrowing", "Base", "crypto", "yield", "APY", "Pippu"],
+    authors: [{ name: "Pippu Team" }],
+    creator: "Pippu",
+    publisher: "Pippu",
+    metadataBase: new URL(baseUrl),
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: baseUrl,
+      title: "Pippu - DeFi Lending Protocol",
+      description: "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+      siteName: "Pippu",
+      images: [
+        {
+          url: `${baseUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: "Pippu - DeFi Lending Protocol",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Pippu - DeFi Lending Protocol",
+      description: "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+      images: [`${baseUrl}/og-image.png`],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    verification: {
+      google: "your-google-verification-code",
+    },
+    other: {
+      'fc:miniapp': JSON.stringify({
+        version: 'next',
+        imageUrl: `${baseUrl}/embed-image.png`,
+        button: {
+          title: `Launch Pippu`,
+          action: {
+            type: 'launch_miniapp',
+            name: 'Pippu',
+            url: baseUrl,
+            splashImageUrl: `${baseUrl}/splash-image.png`,
+            splashBackgroundColor: '#3B82F6',
+          },
+        },
+      }),
+    },
+  }
 }
 
 export default function RootLayout({
