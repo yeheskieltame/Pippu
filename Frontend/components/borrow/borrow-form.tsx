@@ -10,7 +10,7 @@ export function BorrowForm() {
 
   // Get pools and borrowing power data
   const { data: pools = [], isLoading } = usePools()
-  const { data: borrowingPower } = useBorrowingPower("0x0000000000000000000000000000000000000000" as `0x${string}`))
+  const { data: borrowingPower } = useBorrowingPower("0x0000000000000000000000000000000000000000" as `0x${string}`)
 
   // Set default selected pool
   if (!selectedPoolId && pools.length > 0) {
