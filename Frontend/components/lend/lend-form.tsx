@@ -99,10 +99,10 @@ export function LendForm() {
           {selectedPool && (
             <div className="mt-2 p-2 bg-blue-50 rounded-lg">
               <p className="text-xs text-blue-800" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-                Category: {pool.category} • Risk: {pool.riskLevel}
+                Category: {selectedPool.category} • Risk: {selectedPool.riskLevel}
               </p>
               <p className="text-xs text-blue-800" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-                Available: {formatCurrency(parseFloat(pool.metrics.tvl) / Math.pow(10, pool.loanAsset.decimals))}
+                Available: {formatCurrency(parseFloat(selectedPool.metrics.tvl) / Math.pow(10, selectedPool.loanAsset.decimals))}
               </p>
             </div>
           )}
