@@ -72,17 +72,14 @@ export async function generateMetadata(): Promise<Metadata> {
       google: "your-google-verification-code",
     },
     other: {
-      'fc:miniapp': JSON.stringify({
-        version: 'next',
-        imageUrl: `${baseUrl}/embed-image.png`,
+      'fc:frame': JSON.stringify({
+        version: 'vNext',
+        imageUrl: `${baseUrl}/image.png`,
         button: {
-          title: `Launch Pippu`,
+          title: 'Pippu\'it',
           action: {
-            type: 'launch_miniapp',
-            name: 'Pippu',
+            type: 'launch_frame',
             url: baseUrl,
-            splashImageUrl: `${baseUrl}/splash-image.png`,
-            splashBackgroundColor: '#3B82F6',
           },
         },
       }),

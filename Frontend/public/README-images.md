@@ -1,14 +1,16 @@
 # Required Images for Pippu DeFi App
 
-## Images for MiniApp Integration
+## Images for Farcaster Frame Integration
 
-### Core Images
-- **icon.png** - App icon (192x192px, PNG format)
-- **splash-image.png** - Splash screen (375x812px, PNG format)
-- **embed-image.png** - Embed image for social sharing (1200x630px, PNG format)
+### Core Images (Based on Verified Manifest)
+- **icon.png** - App icon (192x192px, PNG format) - Used in manifest
+- **image.png** - Frame image (1200x630px, PNG format) - Used for fc:frame metadata
+- **splash.png** - Splash screen (375x812px, PNG format) - Used in manifest
+
+### Additional Images for SEO
 - **og-image.png** - Open Graph image (1200x630px, PNG format)
 
-### Screenshots
+### Optional Screenshots
 - **screenshots/dashboard.png** - Dashboard screenshot (375x812px, PNG format)
 - **screenshots/lending.png** - Lending page screenshot (375x812px, PNG format)
 - **screenshots/borrowing.png** - Borrowing page screenshot (375x812px, PNG format)
