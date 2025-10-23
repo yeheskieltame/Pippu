@@ -1,12 +1,14 @@
 /**
  * Mock Data for Pippu Lending Demo
- * Realistic data for demonstration purposes
+ * Realistic data for isolated lending pools demonstration
+ * This file maintains backward compatibility while using new types
  */
 
 import { Address } from 'viem';
+import { Pool, Transaction, UserPortfolio, UserStats, BorrowingPower, MarketStats } from './types';
 
 // Mock user portfolio data
-export const mockPortfolio = {
+export const mockPortfolio: UserPortfolio = {
   totalValue: 12450.50,
   totalSupplied: 9250.00,
   totalBorrowed: 3200.00,
@@ -17,151 +19,307 @@ export const mockPortfolio = {
   totalCollateral: 15000.00,
 };
 
-// Mock liquidity pools
-export const mockPools = [
+// Mock isolated lending pools with business names and realistic scenarios
+export const mockPools: Pool[] = [
   {
     id: '1',
-    tokenAddress: '0x4200000000000000000000000000000000000006' as Address,
-    tokenSymbol: 'WETH',
-    tokenName: 'Wrapped Ether',
-    decimals: 18,
-    totalLiquidity: 2500000.50,
-    totalBorrowed: 1250000.25,
-    supplyAPY: 4.5,
-    borrowAPY: 6.2,
-    utilizationRate: 50.0,
-    availableLiquidity: 1250000.25,
+    poolAddress: '0x1234567890abcdef1234567890abcdef12345678' as Address,
+    name: 'TechNova Ventures - Seed Round',
+    description: 'AI-powered SaaS platform development and market expansion',
+    borrower: '0xabcdef1234567890abcdef1234567890abcdef12' as Address,
+    category: 'Technology',
+    riskLevel: 'Medium',
+
+    // Collateral details
+    collateralAsset: {
+      address: '0x4200000000000000000000000000000000000006' as Address,
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      decimals: 18,
+      amount: '1500000000000000000', // 1.5 WETH
+      usdValue: 4275.75,
+      icon: '🔷',
+    },
+
+    // Loan details
+    loanAsset: {
+      address: '0x036CBD5429286c61B3596927D7A3A475f7b3EE9c' as Address,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      amount: '1050000000', // 1,050,000 USDC
+      usdValue: 1050000.00,
+      icon: '💵',
+    },
+
+    // Pool terms
+    terms: {
+      interestRate: 1500, // 15% annual (basis points)
+      loanDuration: 31536000, // 365 days
+      ltvRatio: 70, // 70% max LTV
+      maxLoanAmount: '1050000000',
+      fixedRate: true,
+    },
+
+    // Pool metrics
+    metrics: {
+      totalCollateral: '1500000000000000000',
+      totalLiquidity: '2000000000', // 2M USDC provided by lenders
+      totalLoaned: '1050000000', // 1.05M USDC disbursed
+      utilizationRate: 52.5, // 52.5%
+      tvl: '950000000', // 950K USDC remaining
+      supplyAPY: 15.0,
+      activeLenders: 8,
+    },
+
+    // Status
+    status: {
+      active: true,
+      loanDisbursed: true,
+      loanRepaid: false,
+      defaulted: false,
+      fundingComplete: true,
+    },
+
+    // User participation
     userSupplied: 5000.00,
-    userBorrowed: 1500.00,
-    canSupply: true,
-    canBorrow: true,
-    collateralFactor: 0.8,
-    price: 2850.50,
-    priceChange24h: 2.5,
-    icon: '🔷',
+    userBorrowed: 0.00,
+    canSupply: false, // Funding complete
+    canBorrow: false, // Not borrower
+
+    // Timeline
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+    loanDisbursedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
+    loanDueDate: new Date(Date.now() + 340 * 24 * 60 * 60 * 1000), // Due in 340 days
   },
   {
     id: '2',
-    tokenAddress: '0x036CBD5429286c61B3596927D7A3A475f7b3EE9c' as Address,
-    tokenSymbol: 'USDC',
-    tokenName: 'USD Coin',
-    decimals: 6,
-    totalLiquidity: 5000000.00,
-    totalBorrowed: 2000000.00,
-    supplyAPY: 6.8,
-    borrowAPY: 9.5,
-    utilizationRate: 40.0,
-    availableLiquidity: 3000000.00,
+    poolAddress: '0x2345678901bcdef12345678901bcdef123456789' as Address,
+    name: 'GlobalFashion Retail - Q4 Inventory',
+    description: 'Working capital for holiday season inventory procurement',
+    borrower: '0xbcdef12345678901bcdef12345678901bcdef123' as Address,
+    category: 'E-commerce',
+    riskLevel: 'Low',
+
+    // Collateral details
+    collateralAsset: {
+      address: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA' as Address,
+      symbol: 'USDbC',
+      name: 'Base USD',
+      decimals: 6,
+      amount: '500000000', // 500K USDbC
+      usdValue: 500000.00,
+      icon: '💰',
+    },
+
+    // Loan details
+    loanAsset: {
+      address: '0x036CBD5429286c61B3596927D7A3A475f7b3EE9c' as Address,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      amount: '350000000', // 350K USDC
+      usdValue: 350000.00,
+      icon: '💵',
+    },
+
+    // Pool terms
+    terms: {
+      interestRate: 1000, // 10% annual
+      loanDuration: 15552000, // 180 days (6 months)
+      ltvRatio: 70,
+      maxLoanAmount: '350000000',
+      fixedRate: true,
+    },
+
+    // Pool metrics
+    metrics: {
+      totalCollateral: '500000000',
+      totalLiquidity: '400000000', // 400K USDC total
+      totalLoaned: '350000000', // 350K USDC disbursed
+      utilizationRate: 87.5,
+      tvl: '50000000', // 50K USDC remaining
+      supplyAPY: 10.0,
+      activeLenders: 12,
+    },
+
+    // Status
+    status: {
+      active: true,
+      loanDisbursed: true,
+      loanRepaid: false,
+      defaulted: false,
+      fundingComplete: true,
+    },
+
+    // User participation
     userSupplied: 4250.00,
     userBorrowed: 1700.00,
-    canSupply: true,
-    canBorrow: true,
-    collateralFactor: 0.85,
-    price: 1.00,
-    priceChange24h: 0.1,
-    icon: '💵',
+    canSupply: false, // Almost fully funded
+    canBorrow: false, // Not the borrower
+
+    // Timeline
+    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+    loanDisbursedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), // 40 days ago
+    loanDueDate: new Date(Date.now() + 140 * 24 * 60 * 60 * 1000), // Due in 140 days
   },
   {
     id: '3',
-    tokenAddress: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA' as Address,
-    tokenSymbol: 'USDbC',
-    tokenName: 'Base USD',
-    decimals: 6,
-    totalLiquidity: 1800000.00,
-    totalBorrowed: 720000.00,
-    supplyAPY: 7.2,
-    borrowAPY: 10.1,
-    utilizationRate: 40.0,
-    availableLiquidity: 1080000.00,
+    poolAddress: '0x3456789012cdef123456789012cdef1234567890' as Address,
+    name: 'DeFi Protocol X - VC Round',
+    description: 'Decentralized finance protocol development and security audits',
+    borrower: '0xcdef123456789012cdef123456789012cdef1234' as Address,
+    category: 'DeFi/Web3',
+    riskLevel: 'High',
+
+    // Collateral details
+    collateralAsset: {
+      address: '0x4200000000000000000000000000000000000006' as Address,
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      decimals: 18,
+      amount: '500000000000000000', // 0.5 WETH
+      usdValue: 1425.25,
+      icon: '🔷',
+    },
+
+    // Loan details
+    loanAsset: {
+      address: '0x036CBD5429286c61B3596927D7A3A475f7b3EE9c' as Address,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      amount: '100000000', // 100K USDC
+      usdValue: 100000.00,
+      icon: '💵',
+    },
+
+    // Pool terms
+    terms: {
+      interestRate: 2000, // 20% annual (high risk)
+      loanDuration: 63072000, // 2 years
+      ltvRatio: 70,
+      maxLoanAmount: '100000000',
+      fixedRate: true,
+    },
+
+    // Pool metrics
+    metrics: {
+      totalCollateral: '500000000000000000',
+      totalLiquidity: '120000000', // 120K USDC target
+      totalLoaned: '0', // Not yet funded
+      utilizationRate: 0.0,
+      tvl: '120000000', // 120K USDC available
+      supplyAPY: 20.0,
+      activeLenders: 2,
+    },
+
+    // Status
+    status: {
+      active: true,
+      loanDisbursed: false,
+      loanRepaid: false,
+      defaulted: false,
+      fundingComplete: false, // Still open for funding
+    },
+
+    // User participation
     userSupplied: 0.00,
     userBorrowed: 0.00,
-    canSupply: true,
-    canBorrow: true,
-    collateralFactor: 0.85,
-    price: 1.00,
-    priceChange24h: -0.2,
-    icon: '💰',
+    canSupply: true, // Open for funding
+    canBorrow: false, // Not the borrower
+
+    // Timeline
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    loanDisbursedAt: null, // Not yet
+    loanDueDate: null, // Will be set when loan is disbursed
   },
 ];
 
-// Mock transaction history
-export const mockTransactions = [
+// Mock transaction history with realistic pool-based transactions
+export const mockTransactions: Transaction[] = [
   {
     id: '1',
     type: 'supply' as const,
-    tokenSymbol: 'WETH',
-    tokenAmount: '1.5',
-    usdValue: 4275.75,
+    tokenSymbol: 'USDC',
+    tokenAmount: '5000',
+    usdValue: 5000.00,
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     status: 'completed' as const,
     hash: '0x1234...5678' as Address,
     poolId: '1',
-    description: 'Supplied 1.5 WETH',
+    poolName: 'TechNova Ventures - Seed Round',
+    description: 'Funded TechNova Ventures loan pool',
   },
   {
     id: '2',
-    type: 'borrow' as const,
-    tokenSymbol: 'USDC',
-    tokenAmount: '2000',
-    usdValue: 2000.00,
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-    status: 'completed' as const,
-    hash: '0x8765...4321' as Address,
-    poolId: '2',
-    description: 'Borrowed 2000 USDC',
-  },
-  {
-    id: '3',
-    type: 'repay' as const,
-    tokenSymbol: 'USDC',
-    tokenAmount: '500',
-    usdValue: 500.00,
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    status: 'completed' as const,
-    hash: '0x9876...1234' as Address,
-    poolId: '2',
-    description: 'Repaid 500 USDC',
-  },
-  {
-    id: '4',
-    type: 'withdraw' as const,
-    tokenSymbol: 'WETH',
-    tokenAmount: '0.8',
-    usdValue: 2280.40,
-    timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
-    status: 'completed' as const,
-    hash: '0x5432...8765' as Address,
-    poolId: '1',
-    description: 'Withdrew 0.8 WETH',
-  },
-  {
-    id: '5',
     type: 'supply' as const,
     tokenSymbol: 'USDC',
     tokenAmount: '4250',
     usdValue: 4250.00,
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+    status: 'completed' as const,
+    hash: '0x8765...4321' as Address,
+    poolId: '2',
+    poolName: 'GlobalFashion Retail - Q4 Inventory',
+    description: 'Funded GlobalFashion inventory pool',
+  },
+  {
+    id: '3',
+    type: 'borrow' as const,
+    tokenSymbol: 'USDC',
+    tokenAmount: '1700',
+    usdValue: 1700.00,
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+    status: 'completed' as const,
+    hash: '0x9876...1234' as Address,
+    poolId: '2',
+    poolName: 'GlobalFashion Retail - Q4 Inventory',
+    description: 'Borrowed from GlobalFashion pool',
+  },
+  {
+    id: '4',
+    type: 'repay' as const,
+    tokenSymbol: 'USDC',
+    tokenAmount: '500',
+    usdValue: 500.00,
+    timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
+    status: 'completed' as const,
+    hash: '0x5432...8765' as Address,
+    poolId: '2',
+    poolName: 'GlobalFashion Retail - Q4 Inventory',
+    description: 'Repaid GlobalFashion loan',
+  },
+  {
+    id: '5',
+    type: 'supply' as const,
+    tokenSymbol: 'USDbC',
+    tokenAmount: '500000',
+    usdValue: 500000.00,
     timestamp: new Date(Date.now() - 72 * 60 * 60 * 1000), // 3 days ago
     status: 'completed' as const,
     hash: '0x2468...1357' as Address,
     poolId: '2',
-    description: 'Supplied 4250 USDC',
+    poolName: 'GlobalFashion Retail - Q4 Inventory',
+    description: 'Added collateral to GlobalFashion pool',
   },
   {
     id: '6',
-    type: 'pending' as const,
-    tokenSymbol: 'USDbC',
+    type: 'supply' as const,
+    tokenSymbol: 'USDC',
     tokenAmount: '1000',
     usdValue: 1000.00,
     timestamp: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago
     status: 'pending' as const,
     hash: undefined,
     poolId: '3',
-    description: 'Supplying 1000 USDbC',
+    poolName: 'DeFi Protocol X - VC Round',
+    description: 'Funding DeFi Protocol X development',
   },
 ];
 
 // Mock market statistics
-export const mockMarketStats = {
+export const mockMarketStats: MarketStats = {
   totalValueLocked: 9300000.50,
   totalBorrows: 3970000.25,
   totalSupply: 9300000.50,
@@ -175,7 +333,7 @@ export const mockMarketStats = {
 };
 
 // Mock user statistics
-export const mockUserStats = {
+export const mockUserStats: UserStats = {
   totalDeposits: 28,
   totalWithdrawals: 15,
   totalBorrows: 12,
@@ -188,7 +346,7 @@ export const mockUserStats = {
 };
 
 // Mock borrowing power calculation
-export const mockBorrowingPower = {
+export const mockBorrowingPower: BorrowingPower = {
   totalCollateral: 15000.00,
   totalBorrows: 3200.00,
   availableToBorrow: 2850.00,
@@ -197,7 +355,35 @@ export const mockBorrowingPower = {
   riskLevel: 'low' as const,
 };
 
-// Token icons and colors
+// Helper functions for getting pool information
+export const getPoolName = (poolId: string): string => {
+  const pool = mockPools.find(p => p.id === poolId);
+  return pool?.name || 'Unknown Pool';
+};
+
+export const getPoolIcon = (poolId: string): string => {
+  const pool = mockPools.find(p => p.id === poolId);
+  return pool?.loanAsset.icon || '🪙';
+};
+
+export const getPoolInfo = (poolId: string) => {
+  const pool = mockPools.find(p => p.id === poolId);
+  if (!pool) return null;
+
+  return {
+    name: pool.name,
+    description: pool.description,
+    category: pool.category,
+    riskLevel: pool.riskLevel,
+    loanAsset: pool.loanAsset,
+    collateralAsset: pool.collateralAsset,
+    terms: pool.terms,
+    metrics: pool.metrics,
+    status: pool.status,
+  };
+};
+
+// Token icons and colors (still useful for asset displays)
 export const tokenMetadata = {
   '0x4200000000000000000000000000000000000006': {
     symbol: 'WETH',

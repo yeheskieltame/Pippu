@@ -2,16 +2,19 @@
 
 import { useState } from "react"
 import { ChevronDown, ExternalLink } from "lucide-react"
-import { mockTransactions, mockPools } from "@/lib/mock-data"
+import { useTransactions } from "@/hooks/use-data"
 import { formatRelativeTime, formatCurrency } from "@/lib/utils/index"
 
 export function ActivityTimeline() {
   const [expandedTx, setExpandedTx] = useState<string | null>(null)
   const [filter, setFilter] = useState<string>("all")
 
+  // Use the professional data hook
+  const { data: transactions = [], isLoading } = useTransactions()
+
   const filteredTransactions = filter === "all"
-    ? mockTransactions
-    : mockTransactions.filter(tx => tx.type === filter)
+    ? transactions
+    : transactions.filter(tx => tx.type === filter)
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -56,33 +59,110 @@ export function ActivityTimeline() {
     }
   }
 
-  const getPoolName = (poolId: string) => {
-    const pool = mockPools.find(p => p.id === poolId)
-    return pool?.tokenSymbol || "Unknown Pool"
+  const getPoolIcon = (poolName: string) => {
+    // Extract icon from pool name or use default
+    if (poolName.includes('TechNova')) return '🚀'
+    if (poolName.includes('GlobalFashion')) return '👗'
+    if (poolName.includes('DeFi')) return '💎'
+    return '🪙'
   }
 
-  const getPoolIcon = (poolId: string) => {
-    const pool = mockPools.find(p => p.id === poolId)
-    return pool?.icon || "🪙"
+  const getPoolInfo = (poolName: string) => {
+    // Mock pool info based on name
+    if (poolName.includes('TechNova')) {
+      return {
+        category: 'Technology',
+        riskLevel: 'Medium',
+        terms: { interestRate: 1500 }
+      }
+    }
+    if (poolName.includes('GlobalFashion')) {
+      return {
+        category: 'E-commerce',
+        riskLevel: 'Low',
+        terms: { interestRate: 1000 }
+      }
+    }
+    if (poolName.includes('DeFi')) {
+      return {
+        category: 'DeFi/Web3',
+        riskLevel: 'High',
+        terms: { interestRate: 2000 }
+      }
+    }
+    return {
+      category: 'Other',
+      riskLevel: 'Medium',
+      terms: { interestRate: 1200 }
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="animate-bounce-in" style={{ animationDelay: "0.3s" }}>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-2xl text-heading" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+              transaction history
+            </h3>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-2">
+            {["all", "supply", "borrow", "repay", "withdraw"].map((type) => (
+              <button
+                key={type}
+                className="px-2 py-1 rounded-full text-[10px] font-medium bg-gray-200 text-gray-600 whitespace-nowrap"
+                style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card-glass p-4">
+              <div className="animate-pulse">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/6"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="animate-bounce-in" style={{ animationDelay: "0.3s" }}>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-2xl text-heading">Transaction History</h3>
-        <div className="flex gap-2">
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-2xl text-heading" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+            transaction history
+          </h3>
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-2">
           {["all", "supply", "borrow", "repay", "withdraw"].map((type) => (
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+              className={`px-2 py-1 rounded-full text-[10px] font-medium transition-all whitespace-nowrap ${
                 filter === type
                   ? "bg-blue-500 text-white"
                   : "bg-white/50 text-neutral-600 hover:bg-white/70"
               }`}
               style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
             >
-              {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
+              {type === "all" ? "all" : type}
             </button>
           ))}
         </div>
@@ -117,8 +197,10 @@ export function ActivityTimeline() {
                       {transaction.description}
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{getPoolIcon(transaction.poolId)}</span>
-                      <p className="text-xs text-neutral-600">{getPoolName(transaction.poolId)}</p>
+                      <span className="text-lg">{getPoolIcon(transaction.poolName)}</span>
+                      <p className="text-xs text-neutral-600 truncate">
+                        {transaction.poolName}
+                      </p>
                     </div>
                   </div>
                   <ChevronDown
@@ -181,9 +263,23 @@ export function ActivityTimeline() {
                       <span className="text-neutral-600">USD Value:</span>
                       <span className="font-semibold">{formatCurrency(transaction.usdValue)}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-                      <span className="text-neutral-600">Pool:</span>
-                      <span className="font-semibold">{getPoolName(transaction.poolId)}</span>
+                    <div className="border-t border-white/30 pt-2 mt-2">
+                      <div className="text-xs text-neutral-600 mb-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+                        Pool Information
+                      </div>
+                      <div className="text-sm font-semibold mb-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+                        {transaction.poolName}
+                      </div>
+                      {(() => {
+                        const poolInfo = getPoolInfo(transaction.poolName)
+                        return poolInfo ? (
+                          <div className="text-xs text-neutral-600 space-y-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+                            <div>Category: {poolInfo.category}</div>
+                            <div>Risk Level: {poolInfo.riskLevel}</div>
+                            <div>Interest Rate: {(poolInfo.terms.interestRate / 100).toFixed(1)}% Fixed</div>
+                          </div>
+                        ) : null
+                      })()}
                     </div>
                   </div>
 

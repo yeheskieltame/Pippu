@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { WalletConnect } from "@/components/wallet/wallet-connect"
 
 export function DashboardHeader() {
   const [greeting, setGreeting] = useState("Welcome")
@@ -18,9 +17,6 @@ export function DashboardHeader() {
       <div>
         <h1 className="text-4xl text-heading mb-2">{greeting}! 👋</h1>
         <p className="text-playful text-neutral-600">Ready to grow your assets with Pippu?</p>
-      </div>
-      <div className="hidden md:block">
-        <WalletConnect />
       </div>
     </div>
   )

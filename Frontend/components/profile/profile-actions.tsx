@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useDisconnect } from "wagmi"
 import { LogOut, Download, HelpCircle, ChevronRight } from "lucide-react"
 
 export function ProfileActions() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const { disconnect } = useDisconnect()
 
   const actions = [
     {
@@ -85,7 +87,15 @@ export function ProfileActions() {
               >
                 Cancel
               </button>
-              <button className="flex-1 btn-primary">Disconnect</button>
+              <button
+                onClick={() => {
+                  disconnect()
+                  setShowLogoutConfirm(false)
+                }}
+                className="flex-1 btn-primary"
+              >
+                Disconnect
+              </button>
             </div>
           </div>
         </div>

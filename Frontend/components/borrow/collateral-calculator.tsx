@@ -2,19 +2,23 @@
 
 import type React from "react"
 import { useState } from "react"
-import { mockBorrowingPower, mockPools } from "@/lib/mock-data"
+import { usePools, useBorrowingPower } from "@/hooks/use-data"
 import { formatCurrency } from "@/lib/utils/index"
 
 export function CollateralCalculator() {
-  const [collateralAmount, setCollateralAmount] = useState(mockBorrowingPower.totalCollateral)
+  const { data: pools = [] } = usePools()
+  const { data: borrowingPower } = useBorrowingPower("0x0000000000000000000000000000000000000000" as `0x${string}`)
 
-  const selectedPool = mockPools[1] // USDC pool as default
-  const collateralFactor = selectedPool.collateralFactor
+  const [collateralAmount, setCollateralAmount] = useState(borrowingPower?.totalCollateral || 0)
+
+  // Use a default pool if available, otherwise fallback values
+  const selectedPool = pools.length > 0 ? pools[0] : null
+  const collateralFactor = selectedPool ? selectedPool.terms.ltvRatio / 100 : 0.7 // Default 70% LTV
   const maxLoanAmount = collateralAmount * collateralFactor
-  const currentBorrowAmount = mockBorrowingPower.totalBorrows
+  const currentBorrowAmount = borrowingPower?.totalBorrows || 0
   const remainingCapacity = maxLoanAmount - currentBorrowAmount
 
-  const healthFactor = collateralAmount > 0 ? (collateralAmount * collateralFactor) / currentBorrowAmount : 0
+  const healthFactor = collateralAmount > 0 ? (collateralAmount * collateralFactor) / currentBorrowAmount : borrowingPower?.healthFactor || 1.8
   const borrowLimitUsed = maxLoanAmount > 0 ? (currentBorrowAmount / maxLoanAmount) * 100 : 0
 
   const getRiskLevel = (factor: number) => {
@@ -155,18 +159,21 @@ export function CollateralCalculator() {
           >
             Your Collateral Assets:
           </p>
-          {mockPools.filter(pool => pool.userSupplied > 0).map((pool) => (
+          {pools.filter(pool => pool.userSupplied > 0).map((pool) => (
             <div key={pool.id} className="flex justify-between items-center bg-white/30 rounded-xl p-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">{pool.icon}</span>
-                <span className="text-sm font-medium">{pool.tokenSymbol}</span>
+                <span className="text-lg">{pool.collateralAsset.icon}</span>
+                <span className="text-sm font-medium">{pool.collateralAsset.symbol}</span>
               </div>
               <div className="text-right">
                 <p className="text-sm font-bold">{formatCurrency(pool.userSupplied)}</p>
-                <p className="text-xs text-neutral-600">{pool.supplyAPY}% APY</p>
+                <p className="text-xs text-neutral-600">{pool.metrics.supplyAPY.toFixed(1)}% APY</p>
               </div>
             </div>
           ))}
+          {pools.filter(pool => pool.userSupplied > 0).length === 0 && (
+            <p className="text-xs text-neutral-500 italic">No collateral assets supplied yet</p>
+          )}
         </div>
       </div>
     </div>

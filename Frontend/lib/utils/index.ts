@@ -108,6 +108,13 @@ export function formatPercentage(value: number, decimals: number = 2): string {
 }
 
 /**
+ * Format percentage display (alias for consistency)
+ */
+export function formatPercent(value: number, decimals: number = 1): string {
+  return `${value.toFixed(decimals)}%`;
+}
+
+/**
  * Get token info by address
  */
 export function getTokenInfo(address: Address) {
