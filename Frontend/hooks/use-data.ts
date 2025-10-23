@@ -11,7 +11,8 @@ import { createContractDataStore } from '@/lib/data/contract-repository';
 import { Pool, PoolFilters, SortOption, CreatePoolParams } from '@/lib/types';
 
 // Configuration: Switch between mock and real data
-const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
+// TODO: Fix wagmi provider setup before enabling production contract data
+const USE_MOCK_DATA = true; // Force mock data until contract integration is fixed
 
 // Get appropriate data store
 const dataStore = USE_MOCK_DATA ? mockDataStore : createContractDataStore();
@@ -132,7 +133,7 @@ export function useAddTransaction() {
   return useMutation({
     mutationFn: (transaction: Omit<any, 'id'>) =>
       dataStore.transactions.addTransaction(transaction),
-    onSuccess: (newTransaction) => {
+    onSuccess: () => {
       // Invalidate transactions query
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transactions });
     },
