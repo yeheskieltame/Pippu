@@ -1,17 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { mockMarketStats } from "@/lib/mock-data"
+import { formatCurrency } from "@/lib/utils/index"
 
 export function TVLOverview() {
-  const [totalTVL] = useState(156230)
-  const [totalBorrowed] = useState(89450)
-  const [availableLiquidity] = useState(66780)
-
-  const utilizationRate = (totalBorrowed / totalTVL) * 100
+  const utilizationRate = mockMarketStats.utilizationRate
 
   return (
     <div className="card-gradient mb-6 animate-bounce-in" style={{ animationDelay: "0.1s" }}>
-      <h3 className="text-2xl text-heading mb-4">Pool Overview</h3>
+      <h3 className="text-2xl text-heading mb-4">Protocol Overview</h3>
 
       <div className="space-y-4">
         {/* Main TVL Display */}
@@ -22,12 +19,12 @@ export function TVLOverview() {
           >
             Total Value Locked
           </p>
-          <h2 className="text-4xl text-heading">${totalTVL.toLocaleString()}</h2>
+          <h2 className="text-4xl text-heading">{formatCurrency(mockMarketStats.totalValueLocked)}</h2>
           <p
             className="text-xs text-green-600 mt-2"
             style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
           >
-            Across all pools
+            {mockMarketStats.activeUsers.toLocaleString()} active users
           </p>
         </div>
 
@@ -41,13 +38,12 @@ export function TVLOverview() {
               Total Borrowed
             </p>
             <p className="text-2xl font-bold text-pink-600" style={{ fontFamily: "var(--font-caveat)" }}>
-              ${totalBorrowed.toLocaleString()}
+              {formatCurrency(mockMarketStats.totalBorrows)}
             </p>
             <p
               className="text-xs text-neutral-600 mt-1"
               style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
-            >
-              Active loans
+              >Avg. {mockMarketStats.averageBorrowAPY}% APY
             </p>
           </div>
 
@@ -56,16 +52,16 @@ export function TVLOverview() {
               className="text-xs text-neutral-600 mb-2"
               style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
             >
-              Available
+              24h Volume
             </p>
             <p className="text-2xl font-bold text-blue-600" style={{ fontFamily: "var(--font-caveat)" }}>
-              ${availableLiquidity.toLocaleString()}
+              {formatCurrency(mockMarketStats.volume24h)}
             </p>
             <p
               className="text-xs text-neutral-600 mt-1"
               style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
             >
-              Ready to lend
+              {mockMarketStats.totalTransactions.toLocaleString()} txns
             </p>
           </div>
         </div>
@@ -74,7 +70,7 @@ export function TVLOverview() {
         <div className="bg-white/50 rounded-2xl p-4">
           <div className="flex justify-between items-center mb-2">
             <p className="text-sm font-semibold" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-              Pool Utilization
+              Protocol Utilization
             </p>
             <p className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-caveat)" }}>
               {utilizationRate.toFixed(1)}%
@@ -86,16 +82,20 @@ export function TVLOverview() {
               style={{ width: `${utilizationRate}%` }}
             />
           </div>
-          <p
-            className="text-xs text-neutral-600 mt-2"
-            style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
-          >
-            {utilizationRate > 80
-              ? "High demand - Great rates!"
-              : utilizationRate > 50
-                ? "Moderate demand"
-                : "Low demand - Good for borrowers"}
-          </p>
+          <div className="flex justify-between items-center mt-2">
+            <p
+              className="text-xs text-neutral-600"
+              style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
+            >
+              Avg. Supply APY: <span className="text-green-600 font-bold">{mockMarketStats.averageSupplyAPY}%</span>
+            </p>
+            <p
+              className="text-xs text-neutral-600"
+              style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
+            >
+              Avg. Borrow APY: <span className="text-orange-600 font-bold">{mockMarketStats.averageBorrowAPY}%</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

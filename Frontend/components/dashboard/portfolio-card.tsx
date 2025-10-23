@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { mockPortfolio } from "@/lib/mock-data"
+import { formatCurrency } from "@/lib/utils/index"
 
 export function PortfolioCard() {
   const [showBalance, setShowBalance] = useState(true)
@@ -15,7 +17,9 @@ export function PortfolioCard() {
           >
             Total Portfolio
           </p>
-          <h2 className="text-3xl text-heading">{showBalance ? "$12,450.50" : "••••••"}</h2>
+          <h2 className="text-3xl text-heading">
+            {showBalance ? formatCurrency(mockPortfolio.totalValue) : "••••••"}
+          </h2>
         </div>
         <button onClick={() => setShowBalance(!showBalance)} className="text-2xl hover:scale-110 transition-transform">
           {showBalance ? "👁️" : "🙈"}
@@ -30,22 +34,37 @@ export function PortfolioCard() {
           >
             Borrowed
           </p>
-          <p className="text-xl text-heading">$3,200</p>
+          <p className="text-xl text-heading">{formatCurrency(mockPortfolio.totalBorrowed)}</p>
         </div>
         <div className="bg-white/50 rounded-2xl p-4">
           <p
             className="text-xs text-neutral-600 mb-2"
             style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
           >
-            Lending
+            Supplying
           </p>
-          <p className="text-xl text-heading">$9,250</p>
+          <p className="text-xl text-heading">{formatCurrency(mockPortfolio.totalSupplied)}</p>
         </div>
       </div>
 
       <div className="mt-4 pt-4 border-t border-white/30">
         <p className="text-xs text-neutral-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-          Interest earned this month: <span className="text-pink-500 font-bold">+$125.50</span>
+          Net APY: <span className="text-green-500 font-bold">{mockPortfolio.netAPY}%</span>
+          <span className="mx-2">•</span>
+          Interest earned: <span className="text-pink-500 font-bold">+{formatCurrency(mockPortfolio.interestEarned)}</span>
+        </p>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <p className="text-xs text-neutral-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+          Health Factor: <span className={`font-bold ${mockPortfolio.healthFactor < 1.5 ? 'text-red-500' : 'text-green-500'}`}>
+            {mockPortfolio.healthFactor}
+          </span>
+        </p>
+        <p className="text-xs text-neutral-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+          Available to Borrow: <span className="font-bold text-blue-500">
+            {formatCurrency(mockPortfolio.availableToBorrow)}
+          </span>
         </p>
       </div>
     </div>
