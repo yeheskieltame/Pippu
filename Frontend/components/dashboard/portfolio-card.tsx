@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { useUserPortfolio } from "@/hooks/use-data"
 import { formatCurrency } from "@/lib/utils/index"
@@ -8,10 +8,31 @@ import { WalletConnect } from "@/components/wallet/wallet-connect"
 
 export function PortfolioCard() {
   const [showBalance, setShowBalance] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const { isConnected, address } = useAccount()
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Get user portfolio data
   const { data: portfolio, isLoading } = useUserPortfolio(address as `0x${string}`)
+
+  if (!mounted) {
+    return (
+      <div className="card-gradient mb-6 animate-bounce-in p-6" style={{ animationDelay: "0.1s" }}>
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!isConnected) {
     return (

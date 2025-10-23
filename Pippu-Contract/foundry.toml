@@ -12,4 +12,9 @@ via_ir = true
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 [etherscan]
-base_sepolia = { key = "${ETHERSCAN_API_KEY}" }
+base_sepolia = { key = "${BASESCAN_API_KEY}" }
+
+# Script configurations
+[scripts]
+deploy-mock-tokens = "script/DeployMockTokens.s.sol:DeployMockTokens"
+verify-mock-tokens = "script/DeployMockTokens.s.sol:verifyDeployment"
