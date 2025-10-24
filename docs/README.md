@@ -2,7 +2,7 @@
 
 > **Farcaster-native lending infrastructure that brings trust back to undercollateralized DeFi.**
 
-![Pippu Logo](https://via.placeholder.com/400x200/3B82F6/FFFFFF?text=Pippu)
+![Pippu Logo](https://www.pippu.xyz/icon.png)
 
 ---
 
