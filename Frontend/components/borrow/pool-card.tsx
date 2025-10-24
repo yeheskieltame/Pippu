@@ -27,7 +27,7 @@ interface PoolCardProps {
   onSelect?: (poolAddress: Address) => void
   isSelected?: boolean
   onDepositClick?: (poolAddress: Address, collateralToken: Address) => void
-  onBorrowClick?: (poolAddress: Address, availableToBorrow: number, interestRate: number) => void
+  onBorrowClick?: (poolAddress: Address) => void
 }
 
 export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, onBorrowClick }: PoolCardProps) {
@@ -296,7 +296,7 @@ export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, on
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    onBorrowClick?.(poolAddress, available, interestRatePercent)
+                    onBorrowClick?.(poolAddress)
                   }}
                   disabled={available <= 0}
                   className={`

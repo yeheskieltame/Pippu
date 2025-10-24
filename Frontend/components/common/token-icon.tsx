@@ -30,7 +30,7 @@ export function TokenIcon({ icon, symbol, color, size = "medium", fallback = "ðŸ
       className={`${containerClasses[size]} rounded-full flex items-center justify-center`}
       style={{ backgroundColor: `${color}20` }}
     >
-      {!imageError ? (
+      {!imageError && icon ? (
         <img
           src={icon}
           alt={symbol}

@@ -2,6 +2,7 @@
 
 import { BaseTransaction, type BaseTransactionProps } from "./transaction-wrapper"
 import { type Address, parseUnits } from "viem"
+import { LIQUIDITY_POOL_ABI } from "@/lib/abi/liquidity-pool"
 import { MOCK_TOKEN_CONFIG } from "@/lib/constants/mock-tokens"
 
 export interface DepositCollateralParams {
@@ -11,7 +12,7 @@ export interface DepositCollateralParams {
 }
 
 export interface DepositCollateralTransactionProps
-  extends Omit<BaseTransactionProps, 'functionName' | 'args'> {
+  extends Omit<BaseTransactionProps, 'functionName' | 'args' | 'contractAddress' | 'abi'> {
   params: DepositCollateralParams
 }
 
@@ -46,8 +47,9 @@ export function DepositCollateralTransaction({
   const decimals = getTokenDecimals(params.collateralToken)
   const amountWei = parseUnits(params.amount.toString(), decimals)
 
-  // Prepare transaction arguments
-  const args = [params.poolAddress, amountWei]
+  // Prepare transaction arguments for POOL contract
+  // Note: We're calling the pool contract directly, not the factory
+  const args = [amountWei] // Only amount needed for pool contract
 
   const handleSuccess = (receipt: any) => {
     console.log('Collateral deposited successfully:', receipt)
@@ -61,7 +63,9 @@ export function DepositCollateralTransaction({
 
   return (
     <BaseTransaction
-      functionName="depositCollateral"
+      contractAddress={params.poolAddress} // ← Pool address, not factory
+      abi={LIQUIDITY_POOL_ABI as unknown as any[]} // ← Pool ABI, not factory ABI
+      functionName="depositCollateral" // ← Function in pool contract
       args={args}
       onSuccess={handleSuccess}
       onError={handleError}

@@ -5,7 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { type Address } from "viem"
 import { parseUnits } from "viem"
 import { ERC20_ABI } from "@/lib/abi/erc20"
-import { LENDING_FACTORY_ABI } from "@/lib/abi/lending-factory"
+import { LIQUIDITY_POOL_ABI } from "@/lib/abi/liquidity-pool"
 import { CONTRACT_ADDRESSES } from "@/lib/constants"
 import { formatCurrency } from "@/lib/utils/format"
 import { Button } from "@/components/ui/button"
@@ -45,11 +45,12 @@ export function DepositModal({ isOpen, onClose, poolAddress, collateralToken, on
       setIsApproving(true)
       const amountInWei = parseUnits(amount, 18)
 
+      // Approve token to the POOL contract, not factory
       await approveToken({
         address: collateralToken,
         abi: ERC20_ABI,
         functionName: 'approve',
-        args: [CONTRACT_ADDRESSES.LENDING_FACTORY, amountInWei],
+        args: [poolAddress, amountInWei], // ← Pool address, NOT factory
       })
 
       setNeedsApproval(false)
@@ -68,11 +69,12 @@ export function DepositModal({ isOpen, onClose, poolAddress, collateralToken, on
       setIsDepositing(true)
       const amountInWei = parseUnits(amount, 18)
 
+      // Call depositCollateral on the POOL contract, not factory
       await depositCollateral({
-        address: CONTRACT_ADDRESSES.LENDING_FACTORY,
-        abi: LENDING_FACTORY_ABI,
-        functionName: 'depositCollateral',
-        args: [poolAddress, amountInWei],
+        address: poolAddress, // ← Pool address, NOT factory
+        abi: LIQUIDITY_POOL_ABI,
+        functionName: 'depositCollateral', // ← Function in pool contract
+        args: [amountInWei], // ← Only amount, no pool address needed
       })
 
       onSuccess?.('deposit-tx-hash') // Replace with actual tx hash
@@ -156,6 +158,14 @@ export function DepositModal({ isOpen, onClose, poolAddress, collateralToken, on
               <li>• Collateral will be returned when loan is fully repaid</li>
               <li>• You can deposit additional collateral at any time</li>
             </ul>
+          </div>
+
+          {/* Pool Address Display */}
+          <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+            <p className="text-xs text-gray-600 mb-1">Pool Address:</p>
+            <p className="text-xs font-mono text-gray-800 break-all">
+              {poolAddress}
+            </p>
           </div>
 
           {/* Action Buttons */}

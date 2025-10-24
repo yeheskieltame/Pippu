@@ -17,7 +17,7 @@ export default function BorrowPage() {
   const [mounted, setMounted] = useState(false)
   const [selectedPool, setSelectedPool] = useState<Address | null>(null)
   const [depositModalPool, setDepositModalPool] = useState<{ poolAddress: Address; collateralToken: Address } | null>(null)
-  const [borrowModalPool, setBorrowModalPool] = useState<{ poolAddress: Address; availableToBorrow: number; interestRate: number } | null>(null)
+  const [borrowModalPool, setBorrowModalPool] = useState<{ poolAddress: Address } | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -141,8 +141,8 @@ export default function BorrowPage() {
                 onDepositClick={(poolAddress, collateralToken) => {
                   setDepositModalPool({ poolAddress, collateralToken })
                 }}
-                onBorrowClick={(poolAddress, availableToBorrow, interestRate) => {
-                  setBorrowModalPool({ poolAddress, availableToBorrow, interestRate })
+                onBorrowClick={(poolAddress) => {
+                  setBorrowModalPool({ poolAddress })
                 }}
               />
             </div>
@@ -171,8 +171,6 @@ export default function BorrowPage() {
             isOpen={true}
             onClose={() => setBorrowModalPool(null)}
             poolAddress={borrowModalPool.poolAddress}
-            availableToBorrow={borrowModalPool.availableToBorrow}
-            interestRate={borrowModalPool.interestRate}
             onSuccess={(txHash) => {
               console.log('Borrow successful:', txHash)
               setBorrowModalPool(null)

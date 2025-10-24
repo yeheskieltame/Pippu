@@ -8,7 +8,7 @@ import {
 } from "@coinbase/onchainkit/transaction"
 import { type Address, encodeFunctionData } from "viem"
 import { CONTRACT_ADDRESSES } from "@/lib/constants"
-import { LENDING_FACTORY_ABI, ERC20_ABI } from "@/lib/abi"
+import { LENDING_FACTORY_ABI, ERC20_ABI, LIQUIDITY_POOL_ABI } from "@/lib/abi"
 import { baseSepolia } from "wagmi/chains"
 import type { LifecycleStatus } from "@coinbase/onchainkit/transaction"
 
@@ -19,8 +19,10 @@ export interface TransactionParams {
 }
 
 export interface BaseTransactionProps {
+  contractAddress?: Address // Custom contract address
   functionName: string
   args: any[]
+  abi?: any[] // Custom ABI for the contract
   tokenAddress?: Address // Optional token address for ERC20 transactions
   onSuccess?: (receipt: any) => void
   onError?: (error: any) => void
@@ -33,8 +35,10 @@ export interface BaseTransactionProps {
 }
 
 const BaseTransaction = memo(function BaseTransaction({
+  contractAddress: customContractAddress,
   functionName,
   args,
+  abi: customAbi,
   tokenAddress,
   onSuccess,
   onError,
@@ -63,9 +67,6 @@ const BaseTransaction = memo(function BaseTransaction({
         throw new Error('Invalid transaction argument: one or more arguments are undefined')
       }
     }
-
-    // Skip ABI validation for now to prevent infinite loop
-    // TODO: Add proper validation logic that doesn't cause re-renders
   }, [stringifiedArgs])
 
   // Prepare transaction data using useMemo to prevent re-renders
@@ -73,15 +74,29 @@ const BaseTransaction = memo(function BaseTransaction({
     try {
       validateArguments()
 
-      // Determine which contract and ABI to use
-      const contractAddress = tokenAddress || CONTRACT_ADDRESSES.LENDING_FACTORY
-      const abi = tokenAddress ? ERC20_ABI : LENDING_FACTORY_ABI
+      // Determine which contract, ABI, and address to use
+      let contractAddr: Address
+      let abiToUse: any[]
+
+      if (customContractAddress) {
+        // Use custom contract address and ABI
+        contractAddr = customContractAddress
+        abiToUse = customAbi || LIQUIDITY_POOL_ABI as unknown as any[]
+      } else if (tokenAddress) {
+        // ERC20 token transaction
+        contractAddr = tokenAddress
+        abiToUse = ERC20_ABI as unknown as any[]
+      } else {
+        // Default to lending factory
+        contractAddr = CONTRACT_ADDRESSES.LENDING_FACTORY
+        abiToUse = LENDING_FACTORY_ABI as unknown as any[]
+      }
 
       // Simple transaction data preparation
       const transactionData = {
-        to: contractAddress as Address,
+        to: contractAddr as Address,
         data: encodeFunctionData({
-          abi: abi,
+          abi: abiToUse,
           functionName: functionName as any,
           args: args as any,
         }) as `0x${string}`,
@@ -94,7 +109,7 @@ const BaseTransaction = memo(function BaseTransaction({
       setError(error instanceof Error ? error.message : 'Transaction preparation failed')
       return []
     }
-  }, [functionName, stringifiedArgs, tokenAddress, value])
+  }, [functionName, stringifiedArgs, customContractAddress, customAbi, tokenAddress, value])
 
   // Don't render if calls array is empty (validation failed)
   if (calls.length === 0) {
