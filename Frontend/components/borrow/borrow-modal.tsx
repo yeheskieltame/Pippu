@@ -88,7 +88,7 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
       // We don't need to pass any parameters - it uses the maxLoanAmount we calculated
       await disburseLoan({
         address: poolAddress, // ✅ Pool address, not factory
-        abi: LIQUIDITY_POOL_ABI as any[], // ✅ Pool ABI with proper typing
+        abi: LIQUIDITY_POOL_ABI as unknown as any[], // ✅ Pool ABI with proper typing
         functionName: 'disburseLoan', // ✅ Function in pool contract
         args: [], // ✅ No parameters needed - contract calculates max automatically
         gas: BigInt(300000) // Add gas limit to prevent estimation issues
@@ -192,7 +192,7 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
             <Alert className="border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                {totalCollateral == 0n ?
+                {totalCollateral?.toString() === "0" ?
                   "No collateral found. Please deposit collateral first." :
                   "Not enough liquidity available. Please add more liquidity to the pool."
                 }
