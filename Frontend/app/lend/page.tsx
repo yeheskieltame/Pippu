@@ -4,7 +4,7 @@ import { LayoutWrapper } from "@/components/layout-wrapper"
 import { LendHeader } from "@/components/lend/header"
 import { TVLOverview } from "@/components/lend/tvl-overview"
 import { PoolsList } from "@/components/lend/pools-list"
-import { LendForm } from "@/components/lend/lend-form"
+import { LendFormV2 } from "@/components/lend/lend-form-v2"
 
 export default function LendPage() {
   return (
@@ -13,7 +13,7 @@ export default function LendPage() {
         <LendHeader />
         <TVLOverview />
         <PoolsList />
-        <LendForm />
+        <LendFormV2 />
       </div>
     </LayoutWrapper>
   )
