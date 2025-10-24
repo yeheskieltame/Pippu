@@ -14,23 +14,23 @@ import { CONTRACT_ADDRESSES } from '../constants';
 // ============================================================================
 
 export class ContractPoolRepository implements IPoolRepository {
-  async getPools(filter?: any, sort?: any) {
+  async getPools(filter?: any, sort?: any): Promise<Pool[]> {
     try {
       console.log('getPools called from contract repository');
 
       // Return empty array for now - this will be handled by hooks directly
       // The hooks will use wagmi's useReadContract to call the smart contract functions
       console.warn('Contract repository getPools: Using direct contract calls from hooks instead');
-      return [];
+      return [] as Pool[];
     } catch (error) {
       console.error('Failed to fetch pools from contract:', error);
       console.warn('Falling back to empty array due to contract error');
       // Return empty array for now - in production you might want fallback data
-      return [];
+      return [] as Pool[];
     }
   }
 
-  async getPoolById(id: string) {
+  async getPoolById(id: string): Promise<Pool | null> {
     try {
       // Treat the ID as a pool address and get detailed information
       return await this.getPoolByAddress(id as Address);
@@ -40,7 +40,7 @@ export class ContractPoolRepository implements IPoolRepository {
     }
   }
 
-  async getPoolByAddress(address: Address) {
+  async getPoolByAddress(address: Address): Promise<Pool | null> {
     try {
       // Check if we're in a browser environment with wagmi available
       if (typeof window === 'undefined') {
@@ -254,18 +254,18 @@ export class ContractPoolRepository implements IPoolRepository {
 // ============================================================================
 
 export class ContractTransactionRepository implements ITransactionRepository {
-  async getTransactions(userId?: Address, poolId?: string) {
+  async getTransactions(userId?: Address, poolId?: string): Promise<Transaction[]> {
     try {
       // This would read transaction logs from events using getLogs
       // For now, return empty array
-      return [];
+      return [] as Transaction[];
     } catch (error) {
       console.error('Failed to get transactions:', error);
-      return [];
+      return [] as Transaction[];
     }
   }
 
-  async getTransactionById(id: string) {
+  async getTransactionById(id: string): Promise<Transaction | null> {
     try {
       // This would fetch specific transaction details
       return null;
@@ -383,10 +383,10 @@ export class ContractMarketRepository implements IMarketRepository {
     }
   }
 
-  async getHistoricalData(asset: string, period: string) {
+  async getHistoricalData(asset: string, period: string): Promise<any[]> {
     try {
       // This would read from price feeds or historical events
-      return [];
+      return [] as any[];
     } catch (error) {
       console.error('Failed to get historical data:', error);
       throw error;

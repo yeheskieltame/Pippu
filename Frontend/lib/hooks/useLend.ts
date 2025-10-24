@@ -51,10 +51,9 @@ export interface LendState {
 
 export function useLend() {
   const { address, isConnected } = useAccount()
-  const { writeContract } = useWriteContract()
-  const [pendingTxHash, setPendingTxHash] = useState<Hash | null>(null)
+  const { writeContract, data: hash } = useWriteContract()
   const { data: receipt, isLoading: isWaitingTx, error: txError } = useWaitForTransactionReceipt({
-    hash: pendingTxHash as Hash,
+    hash: hash as Hash,
   })
 
   const [state, setState] = useState<LendState>({
@@ -76,12 +75,11 @@ export function useLend() {
       success: false,
       currentStep: 'idle'
     })
-    setPendingTxHash(null)
-  }
+      }
 
   // Handle transaction completion
   useEffect(() => {
-    if (receipt && pendingTxHash) {
+    if (receipt && hash) {
       if (receipt.status === 'success') {
         setState(prev => ({
           ...prev,
@@ -101,8 +99,7 @@ export function useLend() {
           currentStep: 'idle'
         }))
       }
-      setPendingTxHash(null)
-    }
+          }
 
     if (txError) {
       setState(prev => ({
@@ -113,9 +110,8 @@ export function useLend() {
         error: txError.message,
         currentStep: 'idle'
       }))
-      setPendingTxHash(null)
-    }
-  }, [receipt, txError, pendingTxHash])
+          }
+  }, [receipt, txError, hash])
 
   // Get token decimals
   const getTokenDecimals = (tokenAddress: Address): number => {
@@ -146,8 +142,7 @@ export function useLend() {
         args: [CONTRACT_ADDRESSES.LENDING_FACTORY, amount],
       })
 
-      setPendingTxHash(hash)
-      return true
+            return true
     } catch (error: any) {
       setState(prev => ({
         ...prev,
@@ -176,8 +171,7 @@ export function useLend() {
         args: [poolAddress, amountWei],
       })
 
-      setPendingTxHash(hash)
-      return true
+            return true
     } catch (error: any) {
       setState(prev => ({
         ...prev,
@@ -205,8 +199,7 @@ export function useLend() {
         args: [poolAddress, amountWei],
       })
 
-      setPendingTxHash(hash)
-      return true
+            return true
     } catch (error: any) {
       setState(prev => ({
         ...prev,

@@ -3,8 +3,8 @@
 import { useAccount } from "wagmi"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { WalletConnect, Home, Plus, TrendingUp, PiggyBank, Activity, User, Menu, X } from "lucide-react"
-import { useState } from "react"
+import { Home, Plus, TrendingUp, PiggyBank, Activity, User, Menu, X } from "lucide-react"
+import React, { useState } from "react"
 
 export function Navigation() {
   const { isConnected, address } = useAccount()
@@ -78,7 +78,7 @@ export function Navigation() {
                 </span>
               </div>
             ) : (
-              <w3m-button />
+              React.createElement('w3m-button')
             )}
           </div>
 
@@ -134,7 +134,7 @@ export function Navigation() {
                 </div>
               ) : (
                 <div className="px-3">
-                  <w3m-button />
+                  React.createElement('w3m-button')
                 </div>
               )}
             </div>

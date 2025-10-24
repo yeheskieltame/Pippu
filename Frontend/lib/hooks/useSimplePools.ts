@@ -33,7 +33,9 @@ export function useSimplePools() {
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getAllPools',
-    enabled: isConnected,
+    query: {
+      enabled: isConnected,
+    },
   })
 
   // Get pool info for each pool

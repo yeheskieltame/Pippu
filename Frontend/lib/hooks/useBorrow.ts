@@ -43,10 +43,9 @@ export interface BorrowState {
 
 export function useBorrow() {
   const { address, isConnected } = useAccount()
-  const { writeContract } = useWriteContract()
-  const [pendingTxHash, setPendingTxHash] = useState<Hash | null>(null)
+  const { writeContract, data: hash } = useWriteContract()
   const { data: receipt, isLoading: isWaitingTx, error: txError } = useWaitForTransactionReceipt({
-    hash: pendingTxHash as Hash,
+    hash: hash as Hash,
   })
 
   const [state, setState] = useState<BorrowState>({
@@ -70,12 +69,11 @@ export function useBorrow() {
       success: false,
       currentStep: 'idle'
     })
-    setPendingTxHash(null)
   }
 
   // Handle transaction completion
   useEffect(() => {
-    if (receipt && pendingTxHash) {
+    if (receipt && hash) {
       if (receipt.status === 'success') {
         setState(prev => ({
           ...prev,
@@ -97,7 +95,6 @@ export function useBorrow() {
           currentStep: 'idle'
         }))
       }
-      setPendingTxHash(null)
     }
 
     if (txError) {
@@ -110,9 +107,8 @@ export function useBorrow() {
         error: txError.message,
         currentStep: 'idle'
       }))
-      setPendingTxHash(null)
     }
-  }, [receipt, txError, pendingTxHash])
+  }, [receipt, txError, hash])
 
   // Get token decimals
   const getTokenDecimals = (tokenAddress: Address): number => {
@@ -129,14 +125,12 @@ export function useBorrow() {
     try {
       setState(prev => ({ ...prev, isApproving: true, currentStep: 'approving', error: null }))
 
-      const hash = await writeContract({
+      writeContract({
         address: tokenAddress,
         abi: ERC20_ABI,
         functionName: 'approve',
         args: [CONTRACT_ADDRESSES.LENDING_FACTORY, amount],
       })
-
-      setPendingTxHash(hash)
       return true
     } catch (error: any) {
       setState(prev => ({
@@ -159,14 +153,12 @@ export function useBorrow() {
       const decimals = getTokenDecimals(collateralToken)
       const amountWei = parseUnits(amount.toString(), decimals)
 
-      const hash = await writeContract({
+      writeContract({
         address: CONTRACT_ADDRESSES.LENDING_FACTORY,
         abi: LENDING_FACTORY_ABI,
         functionName: 'depositCollateral',
         args: [poolAddress, amountWei],
       })
-
-      setPendingTxHash(hash)
       return true
     } catch (error: any) {
       setState(prev => ({
@@ -186,14 +178,12 @@ export function useBorrow() {
     try {
       setState(prev => ({ ...prev, isDisbursing: true, currentStep: 'disbursing', error: null }))
 
-      const hash = await writeContract({
+      writeContract({
         address: CONTRACT_ADDRESSES.LENDING_FACTORY,
         abi: LENDING_FACTORY_ABI,
         functionName: 'disburseLoan',
         args: [poolAddress],
       })
-
-      setPendingTxHash(hash)
       return true
     } catch (error: any) {
       setState(prev => ({
@@ -216,15 +206,13 @@ export function useBorrow() {
       // Convert to Wei for ETH payment
       const amountWei = parseUnits(amount.toString(), 18)
 
-      const hash = await writeContract({
+      writeContract({
         address: CONTRACT_ADDRESSES.LENDING_FACTORY,
         abi: LENDING_FACTORY_ABI,
         functionName: 'repayLoan',
         args: [poolAddress],
         value: amountWei, // Send ETH for repayment
       })
-
-      setPendingTxHash(hash)
       return true
     } catch (error: any) {
       setState(prev => ({

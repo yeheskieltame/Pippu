@@ -30,22 +30,20 @@ export function LendForm() {
 
   const selectedPool = pools.find(p => p.id === selectedPoolId)
 
-  // Read real pool data from contract
+  // Read real pool data from contract - use default address to prevent hook rules violation
   const { data: poolDetails } = useReadContract({
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getPoolDetails',
-    args: selectedPool ? [selectedPool.id as Address] : undefined,
-    enabled: !!selectedPool?.id
+    args: selectedPool ? [selectedPool.id as Address] : [CONTRACT_ADDRESSES.LENDING_FACTORY]
   })
 
-  // Get user balance in selected pool
+  // Get user balance in selected pool - use default values to prevent hook rules violation
   const { data: userBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getProviderBalance',
-    args: selectedPool && address ? [selectedPool.id as Address, address] : undefined,
-    enabled: !!selectedPool?.id && !!address
+    args: selectedPool && address ? [selectedPool.id as Address, address] : [CONTRACT_ADDRESSES.LENDING_FACTORY, address || CONTRACT_ADDRESSES.LENDING_FACTORY]
   })
 
   const estimatedMonthlyEarnings = selectedPool
@@ -58,7 +56,7 @@ export function LendForm() {
 
     const success = await executeFund(
       selectedPool.id as Address,
-      selectedPool.loanAsset as Address,
+      selectedPool.loanAsset as unknown as Address,
       depositAmount
     )
 

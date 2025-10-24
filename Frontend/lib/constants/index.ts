@@ -5,7 +5,7 @@ import { MOCK_TOKEN_CONFIG, MOCK_TOKEN_METADATA } from './mock-tokens';
 
 // Contract addresses on Base Sepolia
 export const CONTRACT_ADDRESSES = {
-  LENDING_FACTORY: process.env.NEXT_PUBLIC_LENDING_FACTORY_ADDRESS || '0x977C91fEed2d4FF77AEeeD1bFb2a6f51b2A518F5' as Address,
+  LENDING_FACTORY: (process.env.NEXT_PUBLIC_LENDING_FACTORY_ADDRESS || '0x977C91fEed2d4FF77AEeeD1bFb2a6f51b2A518F5') as Address,
 } as const;
 
 // Use mock tokens for development

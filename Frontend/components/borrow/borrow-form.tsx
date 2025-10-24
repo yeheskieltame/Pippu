@@ -33,13 +33,12 @@ export function BorrowForm() {
 
   const selectedPool = userPools.find(pool => pool.id === selectedPoolId)
 
-  // Read real pool data from contract
+  // Read real pool data from contract - use default address to prevent hook rules violation
   const { data: poolDetails } = useReadContract({
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getPoolDetails',
-    args: selectedPool ? [selectedPool.id as Address] : undefined,
-    enabled: !!selectedPool?.id
+    args: selectedPool ? [selectedPool.id as Address] : [CONTRACT_ADDRESSES.LENDING_FACTORY]
   })
 
   // ETH price assumption for MVP
@@ -50,10 +49,10 @@ export function BorrowForm() {
   const getPoolBorrowingPower = (pool: any) => {
     if (!pool || !poolDetails) return { maxBorrow: 0, available: 0, collateralValue: 0 }
 
-    // Use real contract data
-    const totalCollateral = parseFloat(poolDetails[2] || '0') // totalCollateral
-    const totalLiquidity = parseFloat(poolDetails[3] || '0') // totalLiquidity
-    const totalLoaned = parseFloat(poolDetails[4] || '0') // totalLoaned
+    // Use real contract data - convert bigint to string first
+    const totalCollateral = parseFloat(poolDetails[2]?.toString() || '0') // totalCollateral
+    const totalLiquidity = parseFloat(poolDetails[3]?.toString() || '0') // totalLiquidity
+    const totalLoaned = parseFloat(poolDetails[4]?.toString() || '0') // totalLoaned
 
     // Assuming WETH as collateral (18 decimals)
     const collateralValue = (totalCollateral / Math.pow(10, 18)) * ETH_PRICE
@@ -77,7 +76,7 @@ export function BorrowForm() {
   }
 
   const loanDuration = selectedPool?.terms.loanDuration ? selectedPool.terms.loanDuration / (24 * 60 * 60) : 30 // Convert seconds to days
-  const interestRate = poolDetails ? parseFloat(poolDetails[5] || '0') / 100 : (selectedPool?.terms.interestRate || 12) // Convert from basis points
+  const interestRate = poolDetails ? parseFloat(poolDetails[5]?.toString() || '0') / 100 : (selectedPool?.terms.interestRate || 12) // Convert from basis points
   const interest = calculateInterest(borrowAmount, interestRate, loanDuration)
   const totalToRepay = borrowAmount + interest
 
@@ -89,7 +88,7 @@ export function BorrowForm() {
     // For MVP, we'll assume collateral is already locked in the pool
     const success = await executeBorrow(
       selectedPool.id as Address,
-      selectedPool.collateralAsset as Address,
+      selectedPool.collateralAsset as unknown as Address,
       parseFloat(selectedPool.metrics.totalCollateral) // Use existing collateral amount
     )
 

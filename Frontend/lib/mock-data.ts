@@ -88,9 +88,12 @@ export const mockPools: Pool[] = [
     canBorrow: false, // Not borrower
 
     // Timeline
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    loanDisbursedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
-    loanDueDate: new Date(Date.now() + 340 * 24 * 60 * 60 * 1000), // Due in 340 days
+    timeline: {
+      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      loanDisbursedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
+      loanDueDate: new Date(Date.now() + 340 * 24 * 60 * 60 * 1000), // Due in 340 days
+      lastActivity: new Date(),
+    },
   },
   {
     id: '2',
@@ -159,9 +162,12 @@ export const mockPools: Pool[] = [
     canBorrow: false, // Not the borrower
 
     // Timeline
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
-    loanDisbursedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), // 40 days ago
-    loanDueDate: new Date(Date.now() + 140 * 24 * 60 * 60 * 1000), // Due in 140 days
+    timeline: {
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+      loanDisbursedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000), // 40 days ago
+      loanDueDate: new Date(Date.now() + 140 * 24 * 60 * 60 * 1000), // Due in 140 days
+      lastActivity: new Date(),
+    },
   },
   {
     id: '3',
@@ -230,9 +236,12 @@ export const mockPools: Pool[] = [
     canBorrow: false, // Not the borrower
 
     // Timeline
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-    loanDisbursedAt: null, // Not yet
-    loanDueDate: null, // Will be set when loan is disbursed
+    timeline: {
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      loanDisbursedAt: null, // Not yet
+      loanDueDate: null, // Will be set when loan is disbursed
+      lastActivity: new Date(),
+    },
   },
 ];
 

@@ -51,7 +51,7 @@ export interface CreatePoolState {
   error: string | null
   success: boolean
   poolAddress: Address | null
-  currentStep: 'idle' | 'creating' | 'completed'
+  currentStep: 'idle' | 'approving' | 'creating' | 'completed'
   transactionHash: Hash | null
   isConfirming: boolean
   confirmationTimeout: boolean
@@ -59,14 +59,13 @@ export interface CreatePoolState {
 
 export function useCreatePool() {
   const { address, isConnected } = useAccount()
-  const { writeContract } = useWriteContract()
+  const { writeContract, data: hash } = useWriteContract()
   const publicClient = usePublicClient()
-  const [pendingTxHash, setPendingTxHash] = useState<Hash | null>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const { data: receipt, isLoading: isWaitingTx, error: txError } = useWaitForTransactionReceipt({
-    hash: pendingTxHash as Hash,
+    hash: hash as Hash,
     pollingInterval: 2000, // Poll every 2 seconds
     retryCount: 10, // Retry up to 10 times
   })
@@ -108,8 +107,7 @@ export function useCreatePool() {
       isConfirming: false,
       confirmationTimeout: false
     })
-    setPendingTxHash(null)
-  }
+      }
 
   // Fallback transaction polling mechanism
   const startFallbackPolling = (txHash: Hash) => {
@@ -162,8 +160,7 @@ export function useCreatePool() {
           confirmationTimeout: true,
           currentStep: 'idle'
         }))
-        setPendingTxHash(null)
-      }
+              }
     }, 2000) // Poll every 2 seconds
   }
 
@@ -222,21 +219,20 @@ export function useCreatePool() {
       }))
     }
 
-    setPendingTxHash(null)
-  }
+      }
 
   // Handle transaction completion
   useEffect(() => {
     console.log('Transaction state update:', {
       receipt: !!receipt,
       receiptStatus: receipt?.status,
-      pendingTxHash,
+      hash,
       currentStep: state.currentStep,
       txError: !!txError,
       isWaitingTx
     })
 
-    if (receipt && pendingTxHash && receipt.transactionHash === pendingTxHash) {
+    if (receipt && hash && receipt.transactionHash === hash) {
       console.log('Transaction receipt matches pending hash, processing...')
 
       if (receipt.status === 'success') {
@@ -252,8 +248,7 @@ export function useCreatePool() {
           error: 'Transaction failed: Transaction was reverted by the network',
           currentStep: 'idle'
         }))
-        setPendingTxHash(null)
-      }
+              }
     }
 
     if (txError) {
@@ -276,19 +271,18 @@ export function useCreatePool() {
         error: `Transaction error: ${txError.message}`,
         currentStep: 'idle'
       }))
-      setPendingTxHash(null)
-    }
-  }, [receipt, txError, pendingTxHash, state.currentStep, isWaitingTx])
+          }
+  }, [receipt, txError, hash, state.currentStep, isWaitingTx])
 
   // Set up timeout and fallback polling when transaction is submitted
   useEffect(() => {
-    if (pendingTxHash && (state.currentStep === 'creating' || state.currentStep === 'approving')) {
+    if (hash && (state.currentStep === 'creating' || state.currentStep === 'approving')) {
       setState(prev => ({ ...prev, isConfirming: true, confirmationTimeout: false }))
 
       // Set up timeout for primary transaction receipt checking
       timeoutRef.current = setTimeout(() => {
         console.log('Primary transaction receipt checking timeout, starting fallback polling...')
-        startFallbackPolling(pendingTxHash)
+        startFallbackPolling(hash)
       }, 30000) // 30 seconds timeout for primary method
     }
 
@@ -298,7 +292,7 @@ export function useCreatePool() {
         timeoutRef.current = null
       }
     }
-  }, [pendingTxHash, state.currentStep])
+  }, [hash, state.currentStep])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -339,9 +333,7 @@ export function useCreatePool() {
 
       console.log('Approval transaction submitted:', hash)
 
-      // Set pending transaction hash to trigger the hook
-      setPendingTxHash(hash)
-      setState(prev => ({ ...prev, transactionHash: hash }))
+            setState(prev => ({ ...prev, transactionHash: hash }))
       return true
     } catch (error: any) {
       console.error('Approval error:', error)
@@ -414,9 +406,7 @@ export function useCreatePool() {
 
       console.log('Pool creation transaction submitted:', hash)
 
-      // Set pending transaction hash to trigger the hook
-      setPendingTxHash(hash)
-      setState(prev => ({ ...prev, transactionHash: hash }))
+            setState(prev => ({ ...prev, transactionHash: hash }))
       return hash
     } catch (error: any) {
       console.error('Pool creation error:', error)

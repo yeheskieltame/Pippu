@@ -1,12 +1,14 @@
-import { MetadataRoute } from 'next'
+export function GET() {
+  const robots = `User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
 
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/', '/admin/'],
+Sitemap: https://www.pippu.xyz/sitemap.xml`
+
+  return new Response(robots, {
+    headers: {
+      'Content-Type': 'text/plain',
     },
-    sitemap: 'https://www.pippu.xyz/sitemap.xml',
-  }
+  })
 }

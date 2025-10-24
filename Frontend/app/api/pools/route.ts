@@ -53,8 +53,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Failed to fetch pool details:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     return NextResponse.json(
-      { error: 'Failed to fetch pool details', details: error?.message },
+      { error: 'Failed to fetch pool details', details: errorMessage },
       { status: 500 }
     )
   }
