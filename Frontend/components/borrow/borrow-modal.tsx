@@ -74,20 +74,43 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
     try {
       setIsBorrowing(true)
 
+      // Add better validation before calling contract
+      console.log('Borrow attempt:', {
+        poolAddress,
+        isLoanActive,
+        maxLoan: loanData.maxLoan,
+        totalCollateral,
+        totalLiquidity,
+        interestRate
+      })
+
       // The smart contract handles the maximum amount calculation automatically
       // We don't need to pass any parameters - it uses the maxLoanAmount we calculated
       await disburseLoan({
         address: poolAddress, // ✅ Pool address, not factory
-        abi: LIQUIDITY_POOL_ABI, // ✅ Pool ABI
+        abi: LIQUIDITY_POOL_ABI as any[], // ✅ Pool ABI with proper typing
         functionName: 'disburseLoan', // ✅ Function in pool contract
         args: [], // ✅ No parameters needed - contract calculates max automatically
+        gas: BigInt(300000) // Add gas limit to prevent estimation issues
       })
 
       onSuccess?.('borrow-tx-hash')
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Borrow error:', error)
-      onError?.(error as Error)
+
+      // Provide better error messages
+      if (error.message?.includes('Loan already active')) {
+        onError?.(new Error('You already have an active loan'))
+      } else if (error.message?.includes('No collateral')) {
+        onError?.(new Error('No collateral found in this pool'))
+      } else if (error.message?.includes('Insufficient liquidity')) {
+        onError?.(new Error('Not enough liquidity available to borrow'))
+      } else if (error.message?.includes('onlyBorrower')) {
+        onError?.(new Error('Only the designated borrower can take loans'))
+      } else {
+        onError?.(new Error(error.message || 'Failed to process borrow transaction'))
+      }
     } finally {
       setIsBorrowing(false)
     }
@@ -103,6 +126,19 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
 
   const isBorrowDisabled = isLoanActive || loanData.maxLoan <= 0 || isBorrowing || isCalculating
 
+  // Debug info - remove in production
+  console.log('Borrow Modal Debug:', {
+    poolAddress,
+    poolInfo: poolInfo ? 'loaded' : 'loading',
+    totalCollateral: totalCollateral?.toString(),
+    totalLiquidity: totalLiquidity?.toString(),
+    interestRate: interestRate?.toString(),
+    isLoanActive,
+    maxLoan: loanData.maxLoan,
+    isCalculating,
+    isBorrowDisabled
+  })
+
   // Calculate interest for display (assuming 30-day loan for demo)
   const calculateInterest = (principal: number, rate: number) => {
     const dailyRate = rate / 100 / 365
@@ -112,15 +148,15 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
   const interest = calculateInterest(loanData.maxLoan, Number(interestRate || 0))
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-purple-200">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 z-50">
+      <div className="bg-white rounded-2xl max-w-sm w-full p-4 shadow-2xl border-2 border-purple-200 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+            <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
               Borrow Funds
             </h2>
           </div>
@@ -129,16 +165,23 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
             disabled={isBorrowing}
             className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className="space-y-6">
+        <div className="space-y-3">
           {/* Status Alert */}
-          {isLoanActive ? (
+          {isCalculating ? (
+            <Alert className="border-blue-200 bg-blue-50">
+              <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+              <AlertDescription className="text-blue-800">
+                Calculating available loan amount...
+              </AlertDescription>
+            </Alert>
+          ) : isLoanActive ? (
             <Alert className="border-orange-200 bg-orange-50">
               <Shield className="h-4 w-4 text-orange-600" />
               <AlertDescription className="text-orange-800">
@@ -147,58 +190,63 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
             </Alert>
           ) : loanData.maxLoan <= 0 ? (
             <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                Not enough liquidity available. Please add more liquidity to the pool.
+                {totalCollateral == 0n ?
+                  "No collateral found. Please deposit collateral first." :
+                  "Not enough liquidity available. Please add more liquidity to the pool."
+                }
               </AlertDescription>
             </Alert>
-          ) : null}
+          ) : (
+            <Alert className="border-green-200 bg-green-50">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Ready to borrow! You can borrow up to {formatCurrency(loanData.maxLoan)}.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Loan Calculator */}
           {!isCalculating && !isLoanActive && loanData.maxLoan > 0 && (
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-200">
-              <h3 className="font-semibold text-sm text-purple-900 mb-4 flex items-center gap-2" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-                <Calculator className="w-4 h-4" />
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-3 border border-purple-200">
+              <h3 className="font-semibold text-xs text-purple-900 mb-2 flex items-center gap-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+                <Calculator className="w-3 h-3" />
                 Loan Calculator
               </h3>
 
-              <div className="space-y-3">
-                <div className="bg-white/80 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-purple-700">Maximum Amount</span>
-                    <span className="text-lg font-bold text-purple-900">
+              <div className="space-y-2">
+                <div className="bg-white/80 rounded-lg p-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-purple-700">Max Amount</span>
+                    <span className="text-sm font-bold text-purple-900">
                       {formatCurrency(loanData.maxLoan)}
                     </span>
                   </div>
                   <div className="text-xs text-purple-600">
-                    Based on 70% LTV of your collateral
+                    70% LTV of collateral
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/80 rounded-xl p-3">
-                    <div className="text-xs text-purple-600 mb-1">Interest Rate</div>
-                    <div className="text-sm font-bold text-purple-900">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white/80 rounded-lg p-2">
+                    <div className="text-xs text-purple-600 mb-1">Interest</div>
+                    <div className="text-xs font-bold text-purple-900">
                       {formatPercent(Number(interestRate || 0))}
                     </div>
                   </div>
-                  <div className="bg-white/80 rounded-xl p-3">
+                  <div className="bg-white/80 rounded-lg p-2">
                     <div className="text-xs text-purple-600 mb-1">Duration</div>
-                    <div className="text-sm font-bold text-purple-900">
-                      30 days (fixed)
+                    <div className="text-xs font-bold text-purple-900">
+                      30 days
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/80 rounded-xl p-4 border-2 border-purple-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-purple-700">Est. Interest</span>
-                    <span className="text-sm font-bold text-orange-600">
-                      +{formatCurrency(interest)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between font-bold text-base">
-                    <span className="text-purple-900">Total Repayment</span>
-                    <span className="text-purple-600">
+                <div className="bg-white/80 rounded-lg p-2 border border-purple-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-purple-700">Total Repayment</span>
+                    <span className="text-xs font-bold text-purple-600">
                       {formatCurrency(loanData.maxLoan + interest)}
                     </span>
                   </div>
@@ -208,49 +256,49 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
           )}
 
           {/* Pool Address Display */}
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-            <p className="text-xs text-gray-600 mb-1">Pool Address:</p>
-            <p className="text-xs font-mono text-gray-800 break-all">
-              {poolAddress}
+          <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+            <p className="text-xs text-gray-600 mb-1">Pool:</p>
+            <p className="text-xs font-mono text-gray-800 truncate">
+              {poolAddress.slice(0, 8)}...{poolAddress.slice(-6)}
             </p>
           </div>
 
           {/* Important Terms */}
-          <div className="bg-yellow-50 rounded-2xl p-4 border border-yellow-200">
-            <h3 className="font-semibold text-sm text-yellow-900 mb-2 flex items-center gap-2" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-              <AlertTriangle className="w-4 h-4" />
-              Important Terms
+          <div className="bg-yellow-50 rounded-lg p-2 border border-yellow-200">
+            <h3 className="font-semibold text-xs text-yellow-900 mb-1 flex items-center gap-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+              <AlertTriangle className="w-3 h-3" />
+              Terms
             </h3>
             <ul className="text-xs text-yellow-800 space-y-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-              <li>• Maximum loan is 70% of your collateral value</li>
-              <li>• You must repay the loan amount plus interest</li>
-              <li>• Your ETH collateral will be locked until repayment</li>
-              <li>• Default may result in collateral liquidation</li>
+              <li>• 70% LTV max loan</li>
+              <li>• Repay loan + interest</li>
+              <li>• ETH locked until repayment</li>
+              <li>• Default = liquidation</li>
             </ul>
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Button
               onClick={handleBorrow}
               disabled={isBorrowDisabled}
-              className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
             >
               {isBorrowing ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <Loader2 className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center justify-center space-x-1">
+                  <Loader2 className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Borrowing...</span>
                 </div>
               ) : isCalculating ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <Loader2 className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center justify-center space-x-1">
+                  <Loader2 className="w-3 h-3 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                   <span>Calculating...</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center space-x-2">
+                <div className="flex items-center justify-center space-x-1">
                   <span>Borrow</span>
-                  <span className="font-bold text-lg">{formatCurrency(loanData.maxLoan)}</span>
+                  <span className="font-bold text-xs">{formatCurrency(loanData.maxLoan)}</span>
                 </div>
               )}
             </Button>
@@ -259,7 +307,7 @@ export function BorrowModal({ isOpen, onClose, poolAddress, onSuccess, onError }
               onClick={handleClose}
               disabled={isBorrowing}
               variant="outline"
-              className="w-full py-3 rounded-2xl font-semibold border-2 border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              className="w-full py-1 rounded-lg text-sm font-semibold border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
               style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
             >
               Cancel

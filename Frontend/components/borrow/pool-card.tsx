@@ -128,63 +128,63 @@ export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, on
     <Web3ErrorBoundary>
       <div
         className={`
-          bg-white/80 backdrop-blur-sm rounded-3xl border-2 shadow-lg transition-all duration-300 cursor-pointer
-          hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]
+          bg-white/80 backdrop-blur-sm rounded-xl border shadow-lg transition-all duration-300 cursor-pointer
+          hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]
           ${isExpanded
-            ? 'border-pink-400 bg-gradient-to-br from-pink-50 to-purple-50 min-h-[400px]'
+            ? 'border-pink-400 bg-gradient-to-br from-pink-50 to-purple-50 min-h-[300px]'
             : 'border-pink-200 hover:border-pink-300'
           }
-          ${isSelected ? 'ring-4 ring-pink-300 ring-opacity-50' : ''}
+          ${isSelected ? 'ring-2 ring-pink-300 ring-opacity-50' : ''}
         `}
         onClick={handleCardClick}
       >
         {/* Compact View */}
-        <div className="p-6">
+        <div className="p-3">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
               <div className="relative">
                 <TokenIcon
                   icon={collateralMetadata.icon}
                   symbol={collateralMetadata.symbol}
                   color={collateralMetadata.color}
-                  size="large"
+                  size="medium"
                 />
-                <div className="absolute -bottom-1 -right-1 bg-pink-500 rounded-full p-1">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute -bottom-1 -right-1 bg-pink-500 rounded-full p-0.5">
+                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
               </div>
               <div>
-                <h3 className="font-bold text-lg text-gray-800" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+                <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
                   {poolName}
                 </h3>
-                <p className="text-sm text-gray-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+                <p className="text-xs text-gray-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
                   {formatPercent(interestRatePercent)} APR
                 </p>
               </div>
             </div>
 
             <div className="text-right">
-              <p className="text-xs text-gray-500 mb-1">Collateral Value</p>
-              <p className="text-lg font-bold text-pink-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+              <p className="text-xs text-gray-500">Collateral</p>
+              <p className="text-sm font-bold text-pink-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
                 {formatCurrency(collateralValue)}
               </p>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-pink-50 rounded-2xl p-3">
-              <p className="text-xs text-pink-600 mb-1">Available to Borrow</p>
-              <p className="text-sm font-bold text-pink-700" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="bg-pink-50 rounded-lg p-2">
+              <p className="text-xs text-pink-600">Available</p>
+              <p className="text-xs font-bold text-pink-700" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
                 {formatCurrency(available)}
               </p>
             </div>
-            <div className="bg-purple-50 rounded-2xl p-3">
-              <p className="text-xs text-purple-600 mb-1">Utilization</p>
-              <p className="text-sm font-bold text-purple-700" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
+            <div className="bg-purple-50 rounded-lg p-2">
+              <p className="text-xs text-purple-600">Utilization</p>
+              <p className="text-xs font-bold text-purple-700" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
                 {formatPercent(utilizationPercent)}
               </p>
             </div>
@@ -192,13 +192,13 @@ export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, on
 
           {/* Status Indicators */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${loanActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+            <div className="flex items-center space-x-1">
+              <div className={`w-1.5 h-1.5 rounded-full ${loanActive ? 'bg-green-500' : 'bg-gray-400'}`} />
               <span className="text-xs text-gray-600" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-                {loanActive ? 'Loan Active' : 'No Active Loan'}
+                {loanActive ? 'Active' : 'Inactive'}
               </span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               <TokenIcon
                   icon={loanMetadata.icon}
                   symbol={loanMetadata.symbol}
@@ -210,9 +210,9 @@ export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, on
           </div>
 
           {/* Expand/Collapse Indicator */}
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-2">
             <svg
-              className={`w-5 h-5 text-pink-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-3 h-3 text-pink-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -282,16 +282,16 @@ export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, on
               )}
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     onDepositClick?.(poolAddress, collateralAsset)
                   }}
-                  className="bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 px-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 hover:from-pink-600 hover:to-rose-600"
+                  className="bg-gradient-to-r from-pink-500 to-rose-500 text-white py-2 px-2 rounded-lg text-xs font-semibold shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 hover:from-pink-600 hover:to-rose-600"
                   style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
                 >
-                  💝 Deposit Collateral
+                  💝 Deposit
                 </button>
                 <button
                   onClick={(e) => {
@@ -300,15 +300,15 @@ export function PoolCard({ poolAddress, onSelect, isSelected, onDepositClick, on
                   }}
                   disabled={available <= 0}
                   className={`
-                    py-3 px-4 rounded-2xl font-semibold shadow-lg transform transition-all duration-200
+                    py-2 px-2 rounded-lg text-xs font-semibold shadow transform transition-all duration-200
                     ${available > 0
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:shadow-xl hover:-translate-y-0.5 hover:from-purple-600 hover:to-indigo-600'
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:shadow-lg hover:-translate-y-0.5 hover:from-purple-600 hover:to-indigo-600'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }
                   `}
                   style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
                 >
-                  💰 Borrow Funds
+                  💰 Borrow
                 </button>
               </div>
 
