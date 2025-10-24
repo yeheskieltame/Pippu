@@ -9,7 +9,7 @@
  */
 
 // Re-export everything from the new structure
-export * from './abi';
+export * from './abi/index';
 export * from './constants';
 export * from './utils/index';
 export * from './hooks/useLendingFactory';

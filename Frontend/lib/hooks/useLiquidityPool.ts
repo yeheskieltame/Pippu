@@ -1,7 +1,8 @@
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { getContract } from 'viem';
-import { LIQUIDITY_POOL_ABI } from '../abi';
-import { publicClient } from '../constants';
+import { LIQUIDITY_POOL_ABI } from '../abi/liquidity-pool';
+import { LENDING_FACTORY_ABI } from '../abi/lending-factory';
+import { publicClient, CONTRACT_ADDRESSES } from '../constants';
 import type { Address } from 'viem';
 
 /**
@@ -147,9 +148,10 @@ export function useLiquidityPool(poolAddress: Address) {
     }
 
     return writeContractAsync({
-      address: poolAddress,
-      abi: LIQUIDITY_POOL_ABI,
+      address: CONTRACT_ADDRESSES.LENDING_FACTORY,
+      abi: LENDING_FACTORY_ABI,
       functionName: 'repayLoan',
+      args: [poolAddress],
       value: amount,
     });
   };

@@ -1,6 +1,6 @@
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { getContract } from 'viem';
-import { LENDING_FACTORY_ABI } from '../abi';
+import { LENDING_FACTORY_ABI } from '../abi/lending-factory';
 import { CONTRACT_ADDRESSES, publicClient } from '../constants';
 import type { Address } from 'viem';
 

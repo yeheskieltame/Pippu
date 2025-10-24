@@ -1,461 +1,315 @@
 // LendingFactory ABI extracted from contract JSON
 export const LENDING_FACTORY_ABI = [
   {
-    "type": "function",
-    "name": "allPools",
-    "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "stateMutability": "view"
+    inputs: [{ internalType: "address", name: "owner", type: "address" }],
+    name: "OwnableInvalidOwner",
+    type: "error",
   },
   {
-    "type": "function",
-    "name": "calculateInterest",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "stateMutability": "view"
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  { inputs: [], name: "ReentrancyGuardReentrantCall", type: "error" },
+  {
+    inputs: [{ internalType: "address", name: "token", type: "address" }],
+    name: "SafeERC20FailedOperation",
+    type: "error",
   },
   {
-    "type": "function",
-    "name": "createPool",
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "name": "collateralAsset",
-        "type": "address",
-        "internalType": "address"
-      },
-      { "name": "loanAsset", "type": "address", "internalType": "address" },
-      {
-        "name": "collateralAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      { "name": "loanAmount", "type": "uint256", "internalType": "uint256" },
-      {
-        "name": "interestRate",
-        "type": "uint256",
-        "internalType": "uint256"
+        indexed: true,
+        internalType: "address",
+        name: "previousOwner",
+        type: "address",
       },
       {
-        "name": "loanDuration",
-        "type": "uint256",
-        "internalType": "uint256"
+        indexed: true,
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
       },
-      { "name": "description", "type": "string", "internalType": "string" }
     ],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "stateMutability": "nonpayable"
+    name: "OwnershipTransferred",
+    type: "event",
   },
   {
-    "type": "function",
-    "name": "createPoolWithMetadata",
-    "inputs": [
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "pool", type: "address" },
       {
-        "name": "collateralAsset",
-        "type": "address",
-        "internalType": "address"
+        indexed: true,
+        internalType: "address",
+        name: "borrower",
+        type: "address",
       },
-      { "name": "loanAsset", "type": "address", "internalType": "address" },
+      { indexed: false, internalType: "string", name: "name", type: "string" },
+    ],
+    name: "PoolCreated",
+    type: "event",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "allPools",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "calculateInterest",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "collateralAsset", type: "address" },
+      { internalType: "address", name: "loanAsset", type: "address" },
+      { internalType: "uint256", name: "collateralAmount", type: "uint256" },
+      { internalType: "uint256", name: "loanAmount", type: "uint256" },
+      { internalType: "uint256", name: "interestRate", type: "uint256" },
+      { internalType: "uint256", name: "loanDuration", type: "uint256" },
+      { internalType: "string", name: "description", type: "string" },
+    ],
+    name: "createPool",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "collateralAsset", type: "address" },
+      { internalType: "address", name: "loanAsset", type: "address" },
+      { internalType: "uint256", name: "collateralAmount", type: "uint256" },
+      { internalType: "uint256", name: "loanAmount", type: "uint256" },
+      { internalType: "uint256", name: "interestRate", type: "uint256" },
+      { internalType: "uint256", name: "loanDuration", type: "uint256" },
+      { internalType: "string", name: "description", type: "string" },
+      { internalType: "string", name: "name", type: "string" },
+    ],
+    name: "createPoolWithMetadata",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "pool", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "depositCollateral",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "disburseLoan",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "pool", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "fundPool",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getActivePools",
+    outputs: [{ internalType: "address[]", name: "", type: "address[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getAllPools",
+    outputs: [{ internalType: "address[]", name: "", type: "address[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address[]", name: "pools", type: "address[]" }],
+    name: "getMultiplePoolsInfo",
+    outputs: [
       {
-        "name": "collateralAmount",
-        "type": "uint256",
-        "internalType": "uint256"
+        components: [
+          { internalType: "address", name: "poolAddress", type: "address" },
+          { internalType: "address", name: "borrower", type: "address" },
+          { internalType: "address", name: "collateralAsset", type: "address" },
+          { internalType: "address", name: "loanAsset", type: "address" },
+          { internalType: "uint256", name: "interestRate", type: "uint256" },
+          { internalType: "string", name: "name", type: "string" },
+          { internalType: "bool", name: "active", type: "bool" },
+        ],
+        internalType: "struct LendingFactory.PoolInfo[]",
+        name: "",
+        type: "tuple[]",
       },
-      { "name": "loanAmount", "type": "uint256", "internalType": "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getPoolCount",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "getPoolDetails",
+    outputs: [
+      { internalType: "address", name: "collateralAsset", type: "address" },
+      { internalType: "address", name: "loanAsset", type: "address" },
+      { internalType: "uint256", name: "totalCollateral", type: "uint256" },
+      { internalType: "uint256", name: "totalLiquidity", type: "uint256" },
+      { internalType: "uint256", name: "totalLoaned", type: "uint256" },
+      { internalType: "uint256", name: "interestRate", type: "uint256" },
+      { internalType: "bool", name: "loanActive", type: "bool" },
+      { internalType: "uint256", name: "loanAmount", type: "uint256" },
+      { internalType: "uint256", name: "utilizationRate", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "getPoolInfo",
+    outputs: [
       {
-        "name": "interestRate",
-        "type": "uint256",
-        "internalType": "uint256"
+        components: [
+          { internalType: "address", name: "poolAddress", type: "address" },
+          { internalType: "address", name: "borrower", type: "address" },
+          { internalType: "address", name: "collateralAsset", type: "address" },
+          { internalType: "address", name: "loanAsset", type: "address" },
+          { internalType: "uint256", name: "interestRate", type: "uint256" },
+          { internalType: "string", name: "name", type: "string" },
+          { internalType: "bool", name: "active", type: "bool" },
+        ],
+        internalType: "struct LendingFactory.PoolInfo",
+        name: "",
+        type: "tuple",
       },
-      {
-        "name": "loanDuration",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      { "name": "description", "type": "string", "internalType": "string" },
-      { "name": "name", "type": "string", "internalType": "string" }
     ],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "stateMutability": "nonpayable"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "type": "function",
-    "name": "depositCollateral",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" },
-      { "name": "amount", "type": "uint256", "internalType": "uint256" }
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "getPoolTVL",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "pool", type: "address" },
+      { internalType: "address", name: "provider", type: "address" },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    name: "getProviderBalance",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "type": "function",
-    "name": "disburseLoan",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getUserPools",
+    outputs: [{ internalType: "address[]", name: "", type: "address[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "isLoanDefaulted",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "isPool",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "poolCount",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "poolInfos",
+    outputs: [
+      { internalType: "address", name: "poolAddress", type: "address" },
+      { internalType: "address", name: "borrower", type: "address" },
+      { internalType: "address", name: "collateralAsset", type: "address" },
+      { internalType: "address", name: "loanAsset", type: "address" },
+      { internalType: "uint256", name: "interestRate", type: "uint256" },
+      { internalType: "string", name: "name", type: "string" },
+      { internalType: "bool", name: "active", type: "bool" },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "type": "function",
-    "name": "fundPool",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" },
-      { "name": "amount", "type": "uint256", "internalType": "uint256" }
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "pool", type: "address" }],
+    name: "repayLoan",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "", type: "address" },
+      { internalType: "uint256", name: "", type: "uint256" },
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    name: "userPools",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "type": "function",
-    "name": "getActivePools",
-    "inputs": [],
-    "outputs": [
-      { "name": "", "type": "address[]", "internalType": "address[]" }
+    inputs: [
+      { internalType: "address", name: "pool", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
     ],
-    "stateMutability": "view"
+    name: "withdrawFromPool",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
-  {
-    "type": "function",
-    "name": "getAllPools",
-    "inputs": [],
-    "outputs": [
-      { "name": "", "type": "address[]", "internalType": "address[]" }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getMultiplePoolsInfo",
-    "inputs": [
-      { "name": "pools", "type": "address[]", "internalType": "address[]" }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple[]",
-        "internalType": "struct LendingFactory.PoolInfo[]",
-        "components": [
-          {
-            "name": "poolAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "borrower",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "collateralAsset",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "loanAsset",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "interestRate",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          { "name": "name", "type": "string", "internalType": "string" },
-          { "name": "active", "type": "bool", "internalType": "bool" }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getPoolCount",
-    "inputs": [],
-    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getPoolDetails",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [
-      {
-        "name": "collateralAsset",
-        "type": "address",
-        "internalType": "address"
-      },
-      { "name": "loanAsset", "type": "address", "internalType": "address" },
-      {
-        "name": "totalCollateral",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "totalLiquidity",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      { "name": "totalLoaned", "type": "uint256", "internalType": "uint256" },
-      {
-        "name": "interestRate",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      { "name": "loanActive", "type": "bool", "internalType": "bool" },
-      { "name": "loanAmount", "type": "uint256", "internalType": "uint256" },
-      {
-        "name": "utilizationRate",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getPoolInfo",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct LendingFactory.PoolInfo",
-        "components": [
-          {
-            "name": "poolAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "borrower",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "collateralAsset",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "loanAsset",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "interestRate",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          { "name": "name", "type": "string", "internalType": "string" },
-          { "name": "active", "type": "bool", "internalType": "bool" }
-        ]
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getPoolTVL",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getProviderBalance",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" },
-      { "name": "provider", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getUserPools",
-    "inputs": [
-      { "name": "user", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [
-      { "name": "", "type": "address[]", "internalType": "address[]" }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "isLoanDefaulted",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "isPool",
-    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "owner",
-    "inputs": [],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "poolCount",
-    "inputs": [],
-    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "poolInfos",
-    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "outputs": [
-      { "name": "poolAddress", "type": "address", "internalType": "address" },
-      { "name": "borrower", "type": "address", "internalType": "address" },
-      {
-        "name": "collateralAsset",
-        "type": "address",
-        "internalType": "address"
-      },
-      { "name": "loanAsset", "type": "address", "internalType": "address" },
-      {
-        "name": "interestRate",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      { "name": "name", "type": "string", "internalType": "string" },
-      { "name": "active", "type": "bool", "internalType": "bool" }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "repayLoan",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "transferOwnership",
-    "inputs": [
-      { "name": "newOwner", "type": "address", "internalType": "address" }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "userPools",
-    "inputs": [
-      { "name": "", "type": "address", "internalType": "address" },
-      { "name": "", "type": "uint256", "internalType": "uint256" }
-    ],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "withdrawFromPool",
-    "inputs": [
-      { "name": "pool", "type": "address", "internalType": "address" },
-      { "name": "amount", "type": "uint256", "internalType": "uint256" }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "event",
-    "name": "OwnershipTransferred",
-    "inputs": [
-      {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "PoolCreated",
-    "inputs": [
-      {
-        "name": "pool",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "borrower",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "error",
-    "name": "OwnableInvalidOwner",
-    "inputs": [
-      { "name": "owner", "type": "address", "internalType": "address" }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "OwnableUnauthorizedAccount",
-    "inputs": [
-      { "name": "account", "type": "address", "internalType": "address" }
-    ]
-  },
-  { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },
-  {
-    "type": "error",
-    "name": "SafeERC20FailedOperation",
-    "inputs": [
-      { "name": "token", "type": "address", "internalType": "address" }
-    ]
-  }
 ] as const;
-
-// Event signature for PoolCreated: PoolCreated(address indexed pool, address indexed borrower, string name)
-// Keccak256 hash of "PoolCreated(address,address,string)"
-export const POOL_CREATED_TOPIC = "0x8be80985f28ead440472207dc688e7151a0b906b3ee37d756cb1c22b8d8a37e3";

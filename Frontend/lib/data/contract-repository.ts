@@ -6,7 +6,8 @@
 
 import { Address } from 'viem';
 import { IPoolRepository, ITransactionRepository, IUserRepository, IMarketRepository, Pool, Transaction } from '../types';
-import { LENDING_FACTORY_ABI, LIQUIDITY_POOL_ABI, ERC20_ABI } from '../abi';
+import { LENDING_FACTORY_ABI } from '../abi/lending-factory';
+import { LIQUIDITY_POOL_ABI } from '../abi/liquidity-pool';
 import { CONTRACT_ADDRESSES } from '../constants';
 
 // ============================================================================
