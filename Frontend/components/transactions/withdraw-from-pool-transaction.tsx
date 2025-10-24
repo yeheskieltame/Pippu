@@ -1,6 +1,7 @@
 "use client"
 
 import { BaseTransaction, type BaseTransactionProps } from "./transaction-wrapper"
+import { memo } from "react"
 import { type Address, parseUnits } from "viem"
 import { MOCK_TOKEN_CONFIG } from "@/lib/constants/mock-tokens"
 
@@ -14,7 +15,7 @@ export interface WithdrawFromPoolTransactionProps
   params: WithdrawFromPoolParams
 }
 
-export function WithdrawFromPoolTransaction({
+const WithdrawFromPoolTransaction = memo(function WithdrawFromPoolTransaction({
   params,
   onSuccess,
   onError,
@@ -63,4 +64,6 @@ export function WithdrawFromPoolTransaction({
       className={className}
     />
   )
-}
+})
+
+export { WithdrawFromPoolTransaction }

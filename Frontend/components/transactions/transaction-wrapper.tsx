@@ -1,14 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, memo } from "react"
 import { useAccount } from "wagmi"
 import {
   Transaction,
-  TransactionButton,
-  TransactionStatus,
-  TransactionToast
+  TransactionButton
 } from "@coinbase/onchainkit/transaction"
-import { type Address, parseUnits, encodeFunctionData } from "viem"
+import { type Address, encodeFunctionData } from "viem"
 import { CONTRACT_ADDRESSES } from "@/lib/constants"
 import { LENDING_FACTORY_ABI, ERC20_ABI } from "@/lib/abi"
 import { baseSepolia } from "wagmi/chains"
@@ -34,7 +32,7 @@ export interface BaseTransactionProps {
   value?: bigint
 }
 
-export function BaseTransaction({
+const BaseTransaction = memo(function BaseTransaction({
   functionName,
   args,
   tokenAddress,
@@ -47,12 +45,19 @@ export function BaseTransaction({
   className = "",
   value
 }: BaseTransactionProps) {
-  const { isConnected, address } = useAccount()
+  const { isConnected } = useAccount()
   const [isExecuting, setIsExecuting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Validate all arguments before preparing transaction
-  const validateArguments = () => {
+  // Memoized stringified args for stable dependencies
+  const stringifiedArgs = useMemo(() => {
+    return JSON.stringify(args, (_, value) =>
+      typeof value === 'bigint' ? value.toString() + 'n' : value
+    )
+  }, [args])
+
+  // Validate all arguments before preparing transaction - memoized
+  const validateArguments = useCallback(() => {
     for (const arg of args) {
       if (arg === undefined || arg === null) {
         throw new Error('Invalid transaction argument: one or more arguments are undefined')
@@ -61,7 +66,7 @@ export function BaseTransaction({
 
     // Skip ABI validation for now to prevent infinite loop
     // TODO: Add proper validation logic that doesn't cause re-renders
-  }
+  }, [stringifiedArgs])
 
   // Prepare transaction data using useMemo to prevent re-renders
   const calls = useMemo(() => {
@@ -89,7 +94,7 @@ export function BaseTransaction({
       setError(error instanceof Error ? error.message : 'Transaction preparation failed')
       return []
     }
-  }, [functionName, args, tokenAddress, value])
+  }, [functionName, stringifiedArgs, tokenAddress, value])
 
   // Don't render if calls array is empty (validation failed)
   if (calls.length === 0) {
@@ -103,14 +108,14 @@ export function BaseTransaction({
     )
   }
 
-  const handleSuccess = (response: any) => {
+  const handleSuccess = useCallback((response: any) => {
     console.log(`${functionName} transaction successful:`, response)
     setIsExecuting(false)
     setError(null)
     onSuccess?.(response)
-  }
+  }, [functionName, onSuccess])
 
-  const handleError = (error: any) => {
+  const handleError = useCallback((error: any) => {
     console.error(`${functionName} transaction error:`, error)
     setIsExecuting(false)
 
@@ -126,33 +131,38 @@ export function BaseTransaction({
     }
 
     onError?.(error)
-  }
+  }, [functionName, onError])
 
-  const handleStatusChange = (status: LifecycleStatus) => {
+  const handleStatusChange = useCallback((status: LifecycleStatus) => {
     console.log(`${functionName} transaction status:`, status)
 
-    if (status.statusName === 'transactionPending') {
-      setIsExecuting(true)
-      setError(null)
-    } else if (status.statusName === 'error') {
-      setIsExecuting(false)
-      const errorMessage = status.statusData?.message || status.statusData?.error || 'Transaction failed'
+    try {
+      if (status.statusName === 'transactionPending') {
+        setIsExecuting(true)
+        setError(null)
+      } else if (status.statusName === 'error') {
+        setIsExecuting(false)
+        const errorMessage = status.statusData?.message || status.statusData?.error || 'Transaction failed'
 
-      // Handle specific error types in status
-      if (errorMessage.includes('TimeoutError') || errorMessage.includes('timeout')) {
-        setError('Transaction timed out. The transaction may still be processing. Please check your wallet.')
-      } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
-        setError('Network error: Bad request. Please try again.')
-      } else {
-        setError(errorMessage)
+        // Handle specific error types in status
+        if (errorMessage.includes('TimeoutError') || errorMessage.includes('timeout')) {
+          setError('Transaction timed out. The transaction may still be processing. Please check your wallet.')
+        } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+          setError('Network error: Bad request. Please try again.')
+        } else {
+          setError(errorMessage)
+        }
+      } else if (status.statusName === 'success') {
+        setIsExecuting(false)
+        setError(null)
       }
-    } else if (status.statusName === 'success') {
-      setIsExecuting(false)
-      setError(null)
-    }
 
-    onStatusChange?.(status)
-  }
+      onStatusChange?.(status)
+    } catch (err) {
+      console.error('Error in handleStatusChange:', err)
+      setIsExecuting(false)
+    }
+  }, [functionName, onStatusChange])
 
   if (!isConnected) {
     return (
@@ -165,29 +175,34 @@ export function BaseTransaction({
     )
   }
 
+  // Memoize transaction props to prevent unnecessary re-renders
+  const transactionProps = useMemo(() => ({
+    chainId: baseSepolia.id,
+    calls,
+    onStatus: handleStatusChange,
+    onSuccess: handleSuccess,
+    onError: handleError
+  }), [calls, handleStatusChange, handleSuccess, handleError])
+
   return (
     <>
-      <Transaction
-        chainId={baseSepolia.id}
-        calls={calls}
-        onStatus={handleStatusChange}
-        onSuccess={handleSuccess}
-        onError={handleError}
-      >
+      <Transaction {...transactionProps}>
         <TransactionButton
           text={isExecuting ? loadingText : buttonText}
           disabled={disabled || isExecuting}
           className={className}
         />
-        <TransactionToast>
-          <TransactionStatus>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <span>{loadingText}</span>
-            </div>
-          </TransactionStatus>
-        </TransactionToast>
       </Transaction>
+
+      {/* Custom Loading Indicator - Replaces problematic TransactionToast */}
+      {isExecuting && (
+        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-blue-800">{loadingText}</span>
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -199,4 +214,6 @@ export function BaseTransaction({
       )}
     </>
   )
-}
+})
+
+export { BaseTransaction }

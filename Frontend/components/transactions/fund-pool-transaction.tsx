@@ -1,6 +1,7 @@
 "use client"
 
 import { BaseTransaction, type BaseTransactionProps } from "./transaction-wrapper"
+import { memo } from "react"
 import { type Address, parseUnits } from "viem"
 import { MOCK_TOKEN_CONFIG } from "@/lib/constants/mock-tokens"
 
@@ -15,7 +16,7 @@ export interface FundPoolTransactionProps
   params: FundPoolParams
 }
 
-export function FundPoolTransaction({
+const FundPoolTransaction = memo(function FundPoolTransaction({
   params,
   onSuccess,
   onError,
@@ -72,4 +73,6 @@ export function FundPoolTransaction({
       className={className}
     />
   )
-}
+})
+
+export { FundPoolTransaction }

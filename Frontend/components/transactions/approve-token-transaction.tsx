@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, memo } from "react"
 import { useAccount } from "wagmi"
 import { BaseTransaction, type BaseTransactionProps } from "./transaction-wrapper"
 import { type Address, parseUnits } from "viem"
@@ -18,7 +18,7 @@ export interface ApproveTokenTransactionProps
   params: ApproveTokenParams
 }
 
-export function ApproveTokenTransaction({
+const ApproveTokenTransaction = memo(function ApproveTokenTransaction({
   params,
   onSuccess,
   onError,
@@ -90,4 +90,6 @@ export function ApproveTokenTransaction({
       className={`${className} bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 w-full py-3 rounded-2xl font-semibold transition-all duration-300`}
     />
   )
-}
+})
+
+export { ApproveTokenTransaction }
