@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 export function ProfileHeader() {
-  const [userName] = useState("Alex Chen")
+  const [userName] = useState("Kiel Tame")
   const [userLevel] = useState("Gold Member")
 
   return (
