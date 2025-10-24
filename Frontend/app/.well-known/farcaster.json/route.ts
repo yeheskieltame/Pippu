@@ -29,7 +29,9 @@ export async function GET() {
     "screenshotUrls": [
       "https://www.pippu.xyz/image.png"
     ],
-    "ogImageUrl": "https://www.pippu.xyz/icon.png"
+    "ogImageUrl": "https://www.pippu.xyz/icon.png",
+    "castShareUrl": "https://www.pippu.xyz/share"
+
   },
   "accountAssociation": {
     "header": "eyJmaWQiOjEzODg5MzIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwRmJjNjY2ODNBMjgxMzE2Q2UxNDA1Qzc1RkY4YjUyRTNFNDNEYTg1In0",
