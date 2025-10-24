@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
-import { usePools } from "@/lib/hooks/use-data"
+import { usePoolsFromContract, usePoolDetails } from "@/lib/hooks/use-pool-contract"
 import { formatCurrency, formatPercent } from "@/lib/utils/format"
 import { type Address } from "viem"
 import { useReadContract } from "wagmi"
 import { LENDING_FACTORY_ABI } from "@/lib/abi/lending-factory"
 import { CONTRACT_ADDRESSES } from "@/lib/constants"
+import { MOCK_TOKEN_CONFIG } from "@/lib/constants/mock-tokens"
 import {
   FundPoolTransaction,
-  WithdrawFromPoolTransaction
+  WithdrawFromPoolTransaction,
+  ApproveTokenTransaction
 } from "@/components/transactions"
 import { Web3ErrorBoundary } from "@/components/common/web3-error-boundary"
 
@@ -35,12 +37,13 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
 
   // Transaction states
   const [transactions, setTransactions] = useState<{
+    approve?: { status: 'idle' | 'pending' | 'success' | 'error'; hash?: string }
     fund?: { status: 'idle' | 'pending' | 'success' | 'error'; hash?: string }
     withdraw?: { status: 'idle' | 'pending' | 'success' | 'error'; hash?: string }
   }>({})
 
-  // Get pools data
-  const { data: pools = [], isLoading, refetch: refetchPools } = usePools()
+  // Get pools data from contract
+  const { pools, isLoading, error, refetch } = usePoolsFromContract()
 
   // Set default selected pool
   useEffect(() => {
@@ -51,25 +54,19 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
 
   const selectedPool = pools.find(p => p.id === selectedPoolId)
 
-  // Read real pool data from contract
-  const { data: poolDetails, refetch: refetchPoolDetails } = useReadContract({
-    address: CONTRACT_ADDRESSES.LENDING_FACTORY,
-    abi: LENDING_FACTORY_ABI,
-    functionName: 'getPoolDetails',
-    args: selectedPool ? [selectedPool.id as Address] : undefined,
-    query: {
-      enabled: !!selectedPool?.id
-    }
-  })
+  // Get pool details for selected pool
+  const { poolDetails, poolInfo, isLoading: isLoadingDetails } = usePoolDetails(
+    selectedPool?.poolAddress
+  )
 
   // Get user balance in selected pool
   const { data: userBalance, refetch: refetchUserBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getProviderBalance',
-    args: selectedPool && address ? [selectedPool.id as Address, address] : undefined,
+    args: selectedPool && address ? [selectedPool.poolAddress as Address, address] : undefined,
     query: {
-      enabled: !!selectedPool?.id && !!address
+      enabled: !!selectedPool?.poolAddress && !!address
     }
   })
 
@@ -86,12 +83,21 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
   const canWithdraw = userBalanceFormatted > 0 && withdrawAmount <= userBalanceFormatted
 
   // Transaction handlers
+  const handleApproveSuccess = (receipt: any) => {
+    setTransactions(prev => ({ ...prev, approve: { status: 'success', hash: receipt.transactionReceipts[0].transactionHash } }))
+    onSuccess?.('approve', receipt)
+  }
+
+  const handleApproveError = (error: any) => {
+    setTransactions(prev => ({ ...prev, approve: { status: 'error' } }))
+    onError?.(error)
+  }
+
   const handleFundSuccess = (receipt: any) => {
     setTransactions(prev => ({ ...prev, fund: { status: 'success', hash: receipt.transactionReceipts[0].transactionHash } }))
     onSuccess?.('fund', receipt)
-    refetchPoolDetails()
+    refetch() // Refetch pools
     refetchUserBalance()
-    refetchPools()
   }
 
   const handleFundError = (error: any) => {
@@ -102,9 +108,8 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
   const handleWithdrawSuccess = (receipt: any) => {
     setTransactions(prev => ({ ...prev, withdraw: { status: 'success', hash: receipt.transactionReceipts[0].transactionHash } }))
     onSuccess?.('withdraw', receipt)
-    refetchPoolDetails()
+    refetch() // Refetch pools
     refetchUserBalance()
-    refetchPools()
   }
 
   const handleWithdrawError = (error: any) => {
@@ -136,11 +141,27 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
     )
   }
 
+  if (error) {
+    return (
+      <div className="card-glass animate-bounce-in p-6" style={{ animationDelay: "0.3s" }}>
+        <h3 className="text-2xl text-heading mb-4">Start Lending</h3>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-800 text-center">
+            Error loading pools: {error}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (pools.length === 0) {
     return (
       <div className="card-glass animate-bounce-in p-6" style={{ animationDelay: "0.3s" }}>
         <h3 className="text-2xl text-heading mb-4">Start Lending</h3>
         <p className="text-center text-neutral-600">No pools available for lending at the moment.</p>
+        <p className="text-center text-sm text-neutral-500 mt-2">
+          Make sure you're connected to Base Sepolia testnet and the contract is deployed.
+        </p>
       </div>
     )
   }
@@ -213,9 +234,22 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
                     <span className="font-bold text-blue-600">{selectedPool.metrics.supplyAPY.toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-blue-800">Interest Rate:</span>
+                    <span className="font-bold text-blue-600">{selectedPool.terms.interestRate}%</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-blue-800">TVL:</span>
                     <span className="font-bold text-blue-600">
-                      {formatCurrency(parseFloat(selectedPool.metrics.tvl) / Math.pow(10, 6))}
+                      {poolInfo?.tvl
+                        ? formatCurrency(parseFloat(poolInfo.tvl.toString()) / Math.pow(10, 6))
+                        : formatCurrency(parseFloat(selectedPool.metrics.tvl) / Math.pow(10, 6))
+                      }
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-800">Status:</span>
+                    <span className={`font-bold ${selectedPool.status.active ? 'text-green-600' : 'text-red-600'}`}>
+                      {selectedPool.status.active ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                 </div>
@@ -283,23 +317,71 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
                 </div>
               )}
 
-              <FundPoolTransaction
-                params={{
-                  poolAddress: selectedPool?.id as Address,
-                  loanToken: selectedPool?.loanAsset?.address as Address,
-                  amount: depositAmount
-                }}
-                onSuccess={handleFundSuccess}
-                onError={handleFundError}
-                disabled={!canFund}
-                buttonText={`Fund ${formatCurrency(depositAmount)}`}
-                loadingText="Funding Pool..."
-                className={`w-full py-3 rounded-2xl font-semibold transition-all duration-300 ${
-                  canFund
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              />
+              {/* Approve Step */}
+              <div className="space-y-3">
+                <ApproveTokenTransaction
+                  params={{
+                    tokenAddress: selectedPool?.loanAsset?.address as Address,
+                    spenderAddress: selectedPool?.poolAddress as Address, // Approve to the pool address
+                    amount: depositAmount,
+                    isUnlimited: true // Approve unlimited amount for convenience
+                  }}
+                  onSuccess={handleApproveSuccess}
+                  onError={handleApproveError}
+                  buttonText="Approve USDC"
+                  loadingText="Approving USDC..."
+                  className={`w-full py-3 rounded-2xl font-semibold transition-all duration-300 ${
+                    selectedPool?.loanAsset?.address && selectedPool?.poolAddress
+                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                />
+
+                {/* Fund Pool - Only show after approve succeeds */}
+                {transactions.approve?.status === 'success' && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4">
+                    <p className="text-green-800 text-center text-sm">
+                      ✅ USDC approved! You can now fund the pool.
+                    </p>
+                    <p className="text-green-600 text-center text-xs mt-1">
+                      Pool {selectedPool?.poolAddress?.slice(0, 8)}...{selectedPool?.poolAddress?.slice(-6)} can now spend your USDC
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Fund Pool Transaction */}
+              {transactions.approve?.status === 'success' && (
+                <FundPoolTransaction
+                  params={{
+                    poolAddress: selectedPool?.poolAddress as Address,
+                    loanToken: selectedPool?.loanAsset?.address as Address,
+                    amount: depositAmount
+                  }}
+                  onSuccess={handleFundSuccess}
+                  onError={handleFundError}
+                  disabled={!canFund}
+                  buttonText={`Fund ${formatCurrency(depositAmount)}`}
+                  loadingText="Funding Pool..."
+                  className={`w-full py-3 rounded-2xl font-semibold transition-all duration-300 ${
+                    canFund
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                />
+              )}
+
+              {/* Show info message when not yet approved */}
+              {transactions.approve?.status !== 'success' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                  <p className="text-blue-800 text-center text-sm">
+                    📝 Approve USDC to spend from your wallet to pool: {selectedPool?.poolAddress?.slice(0, 8)}...{selectedPool?.poolAddress?.slice(-6)}
+                  </p>
+                  <p className="text-blue-600 text-center text-xs mt-1">
+                    This allows the pool to transfer your USDC for lending
+                  </p>
+                </div>
+              )}
             </>
           )}
 
@@ -367,7 +449,7 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
               ) : (
                 <WithdrawFromPoolTransaction
                   params={{
-                    poolAddress: selectedPool?.id as Address,
+                    poolAddress: selectedPool?.poolAddress as Address,
                     amount: withdrawAmount
                   }}
                   onSuccess={handleWithdrawSuccess}
@@ -386,10 +468,12 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
           )}
 
           {/* Transaction Status Display */}
-          {(transactions.fund?.status === 'success' || transactions.withdraw?.status === 'success') && (
+          {(transactions.approve?.status === 'success' || transactions.fund?.status === 'success' || transactions.withdraw?.status === 'success') && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
               <p className="text-sm text-green-800 font-medium">
-                🎉 Transaction completed successfully!
+                🎉 {transactions.approve?.status === 'success' && 'USDC approved successfully for pool spending!'}
+                {transactions.fund?.status === 'success' && 'Pool funded successfully!'}
+                {transactions.withdraw?.status === 'success' && 'Withdrawal completed successfully!'}
               </p>
               <button
                 onClick={resetTransactions}

@@ -63,9 +63,9 @@ export function BorrowFormV2({ onSuccess, onError }: BorrowFormV2Props) {
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getPoolDetails',
-    args: selectedPool ? [selectedPool.id as Address] : undefined,
+    args: selectedPool ? [selectedPool.poolAddress as Address] : undefined,
     query: {
-      enabled: !!selectedPool?.id
+      enabled: !!selectedPool?.poolAddress
     }
   })
 
@@ -92,7 +92,7 @@ export function BorrowFormV2({ onSuccess, onError }: BorrowFormV2Props) {
   }
 
   const borrowingPower = selectedPool ? getPoolBorrowingPower(selectedPool) : { maxBorrow: 0, available: 0, collateralValue: 0 }
-  const canBorrow = selectedPool && borrowAmount <= borrowingPower.available && borrowingPower.available > 0 && !!selectedPool?.id
+  const canBorrow = selectedPool && borrowAmount <= borrowingPower.available && borrowingPower.available > 0 && !!selectedPool?.poolAddress
 
   // Interest calculation
   const calculateInterest = (amount: number, rate: number, days: number) => {
@@ -359,7 +359,7 @@ export function BorrowFormV2({ onSuccess, onError }: BorrowFormV2Props) {
               {/* Borrow Action Buttons */}
               <div className="space-y-3">
                 <DisburseLoanTransaction
-                  params={{ poolAddress: selectedPool?.id as Address }}
+                  params={{ poolAddress: selectedPool?.poolAddress as Address }}
                   onSuccess={handleDisburseSuccess}
                   onError={handleDisburseError}
                   disabled={!canBorrow || !selectedPool}
@@ -404,7 +404,7 @@ export function BorrowFormV2({ onSuccess, onError }: BorrowFormV2Props) {
 
               <DepositCollateralTransaction
                 params={{
-                  poolAddress: selectedPool?.id as Address,
+                  poolAddress: selectedPool?.poolAddress as Address,
                   collateralToken: selectedPool?.collateralAsset?.address as Address,
                   amount: depositAmount
                 }}
@@ -456,7 +456,7 @@ export function BorrowFormV2({ onSuccess, onError }: BorrowFormV2Props) {
 
               <RepayLoanTransaction
                 params={{
-                  poolAddress: selectedPool?.id as Address,
+                  poolAddress: selectedPool?.poolAddress as Address,
                   amount: totalToRepay
                 }}
                 onSuccess={handleRepaySuccess}

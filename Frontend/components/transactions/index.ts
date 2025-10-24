@@ -1,5 +1,6 @@
 // Transaction components
 export { BaseTransaction } from "./transaction-wrapper"
+export { ApproveTokenTransaction } from "./approve-token-transaction"
 export { DepositCollateralTransaction } from "./deposit-collateral-transaction"
 export { DisburseLoanTransaction } from "./disburse-loan-transaction"
 export { RepayLoanTransaction } from "./repay-loan-transaction"
@@ -11,6 +12,11 @@ export type {
   TransactionParams,
   BaseTransactionProps
 } from "./transaction-wrapper"
+
+export type {
+  ApproveTokenParams,
+  ApproveTokenTransactionProps
+} from "./approve-token-transaction"
 
 export type {
   DepositCollateralParams,

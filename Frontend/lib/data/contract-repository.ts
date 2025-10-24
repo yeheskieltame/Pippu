@@ -16,125 +16,12 @@ import { CONTRACT_ADDRESSES } from '../constants';
 export class ContractPoolRepository implements IPoolRepository {
   async getPools(filter?: any, sort?: any) {
     try {
-      // Check if we're in a browser environment with wagmi available
-      if (typeof window === 'undefined') {
-        console.warn('Contract repository called in SSR environment, returning empty array');
-        return [];
-      }
+      console.log('getPools called from contract repository');
 
-      // Try to access wagmi from window (simpler approach for now)
-      // In a real implementation, you'd inject the wagmi client or config
-      const wagmiClient = (window as any).wagmiClient;
-      if (!wagmiClient) {
-        console.warn('Wagmi client not available, falling back to mock data');
-        return [];
-      }
-
-      // Get pools from factory contract
-      const pools = await wagmiClient.readContract({
-        address: CONTRACT_ADDRESSES.LENDING_FACTORY,
-        abi: LENDING_FACTORY_ABI,
-        functionName: 'getActivePoolsPaginated',
-        args: [0, 50], // offset, limit
-      });
-
-      if (!pools || !Array.isArray(pools) || pools.length === 0) {
-        console.warn('No pools found from contract, returning empty array');
-        return [];
-      }
-
-      const poolsData = pools[0] as any[];
-
-      // Transform contract data to Pool interface
-      const transformedPools: Pool[] = poolsData.map((poolData, index) => ({
-        id: poolData.poolAddress || `pool-${index}`,
-        poolAddress: poolData.poolAddress,
-        name: poolData.name || `Pool ${index + 1}`,
-        description: poolData.description || '',
-        borrower: '0x0000000000000000000000000000000000000000' as Address, // Would get from contract
-        category: 'lending',
-        riskLevel: (poolData.riskLevel === 'Low' ? 'Low' :
-                   poolData.riskLevel === 'High' ? 'High' : 'Medium') as 'Low' | 'Medium' | 'High',
-        collateralAsset: {
-          address: '' as Address, // Would need additional contract call to get this
-          symbol: 'ETH',
-          name: 'Ethereum',
-          decimals: 18,
-          amount: '0',
-          usdValue: 0,
-          icon: '/icons/eth.png',
-        },
-        loanAsset: {
-          address: '' as Address, // Would need additional contract call to get this
-          symbol: 'USDC',
-          name: 'USD Coin',
-          decimals: 6,
-          amount: '0',
-          usdValue: 0,
-          icon: '/icons/usdc.png',
-        },
-        terms: {
-          interestRate: Number(poolData.interestRate) || 0,
-          loanDuration: 30 * 24 * 60 * 60, // 30 days in seconds
-          ltvRatio: 70,
-          maxLoanAmount: '0',
-          fixedRate: true,
-        },
-        metrics: {
-          totalCollateral: '0',
-          totalLiquidity: poolData.tvl?.toString() || '0',
-          totalLoaned: poolData.totalBorrowed?.toString() || '0',
-          utilizationRate: Number(poolData.utilizationRate) || 0,
-          tvl: poolData.tvl?.toString() || '0',
-          supplyAPY: (Number(poolData.interestRate) || 0) / 100,
-          activeLenders: Number(poolData.lendersCount) || 0,
-        },
-        status: {
-          active: poolData.active || true,
-          loanDisbursed: false,
-          loanRepaid: false,
-          defaulted: false,
-          fundingComplete: false,
-        },
-        timeline: {
-          createdAt: new Date(),
-          loanDisbursedAt: null,
-          loanDueDate: null,
-          lastActivity: new Date(),
-        },
-        userSupplied: 0,
-        userBorrowed: 0,
-        canSupply: poolData.active || true,
-        canBorrow: poolData.active || true,
-      }));
-
-      // Apply filtering and sorting if provided
-      let filteredPools = transformedPools;
-
-      if (filter?.riskLevel) {
-        filteredPools = filteredPools.filter(pool => pool.riskLevel === filter.riskLevel);
-      }
-
-      if (filter?.category) {
-        filteredPools = filteredPools.filter(pool => pool.category === filter.category);
-      }
-
-      if (sort) {
-        filteredPools.sort((a, b) => {
-          switch (sort) {
-            case 'apy':
-              return b.metrics.supplyAPY - a.metrics.supplyAPY;
-            case 'tvl':
-              return Number(b.metrics.tvl) - Number(a.metrics.tvl);
-            case 'name':
-              return a.name.localeCompare(b.name);
-            default:
-              return 0;
-          }
-        });
-      }
-
-      return filteredPools;
+      // Return empty array for now - this will be handled by hooks directly
+      // The hooks will use wagmi's useReadContract to call the smart contract functions
+      console.warn('Contract repository getPools: Using direct contract calls from hooks instead');
+      return [];
     } catch (error) {
       console.error('Failed to fetch pools from contract:', error);
       console.warn('Falling back to empty array due to contract error');
@@ -145,9 +32,8 @@ export class ContractPoolRepository implements IPoolRepository {
 
   async getPoolById(id: string) {
     try {
-      // For now, try to get from pools array
-      const pools = await this.getPools();
-      return pools.find(pool => pool.id === id) || null;
+      // Treat the ID as a pool address and get detailed information
+      return await this.getPoolByAddress(id as Address);
     } catch (error) {
       console.error('Failed to get pool by ID:', error);
       return null;
@@ -156,11 +42,180 @@ export class ContractPoolRepository implements IPoolRepository {
 
   async getPoolByAddress(address: Address) {
     try {
-      const pools = await this.getPools();
-      return pools.find(pool => pool.poolAddress === address) || null;
+      // Check if we're in a browser environment with wagmi available
+      if (typeof window === 'undefined') {
+        console.warn('Contract repository called in SSR environment, returning null');
+        return null;
+      }
+
+      const wagmiClient = (window as any).wagmiClient;
+      if (!wagmiClient) {
+        console.warn('Wagmi client not available, falling back to pools array');
+        const pools = await this.getPools();
+        return pools.find(pool => pool.poolAddress === address) || null;
+      }
+
+      // Get pool details and info in parallel
+      const [poolDetails, poolInfo] = await Promise.all([
+        wagmiClient.readContract({
+          address: CONTRACT_ADDRESSES.LENDING_FACTORY,
+          abi: LENDING_FACTORY_ABI,
+          functionName: 'getPoolDetails',
+          args: [address],
+        }),
+        wagmiClient.readContract({
+          address: CONTRACT_ADDRESSES.LENDING_FACTORY,
+          abi: LENDING_FACTORY_ABI,
+          functionName: 'getPoolInfo',
+          args: [address],
+        })
+      ]);
+
+      // Get basic pool info from getAllPools to get name and other basic info
+      const poolAddresses = await wagmiClient.readContract({
+        address: CONTRACT_ADDRESSES.LENDING_FACTORY,
+        abi: LENDING_FACTORY_ABI,
+        functionName: 'getAllPools',
+        args: [],
+      });
+
+      const poolsInfo = await wagmiClient.readContract({
+        address: CONTRACT_ADDRESSES.LENDING_FACTORY,
+        abi: LENDING_FACTORY_ABI,
+        functionName: 'getMultiplePoolsInfo',
+        args: [poolAddresses],
+      });
+
+      // Find the specific pool info from the array
+      const poolBasicInfo = poolsInfo.find((info: any[]) =>
+        info[0].toLowerCase() === address.toLowerCase()
+      );
+
+      if (!poolBasicInfo) {
+        console.warn('Pool basic info not found for address:', address);
+        return null;
+      }
+
+      // Extract basic info: [poolAddress, owner, collateralAsset, loanAsset, interestRate, name, active]
+      const [
+        poolAddress,
+        borrower,
+        collateralAssetAddress,
+        loanAssetAddress,
+        interestRate,
+        name,
+        active
+      ] = poolBasicInfo as any[];
+
+      // Extract details: {collateralAsset, loanAsset, totalCollateral, totalLiquidity, totalLoaned, interestRate, loanActive, loanAmount, utilizationRate}
+      const {
+        collateralAsset: detailsCollateralAsset,
+        loanAsset: detailsLoanAsset,
+        totalCollateral,
+        totalLiquidity,
+        totalLoaned,
+        interestRate: detailsInterestRate,
+        loanActive,
+        loanAmount,
+        utilizationRate
+      } = poolDetails as any;
+
+      // Extract info: {tvl}
+      const { tvl } = poolInfo as any;
+
+      // Determine asset details
+      const getAssetDetails = (assetAddress: Address) => {
+        if (assetAddress.toLowerCase().includes('4200000000000000000000000000000000000006'.toLowerCase())) {
+          return {
+            address: assetAddress as Address,
+            symbol: 'WETH',
+            name: 'Wrapped Ether',
+            decimals: 18,
+            amount: '0',
+            usdValue: 0,
+            icon: '/icons/weth.png',
+          };
+        } else if (assetAddress.toLowerCase().includes('77c4a1cD22005b67Eb9CcEaE7E9577188d7Bca82'.toLowerCase())) {
+          return {
+            address: assetAddress as Address,
+            symbol: 'mUSDC',
+            name: 'Mock USD Coin',
+            decimals: 6,
+            amount: '0',
+            usdValue: 0,
+            icon: '/icons/usdc.png',
+          };
+        } else {
+          return {
+            address: assetAddress as Address,
+            symbol: 'TOKEN',
+            name: 'Token',
+            decimals: 18,
+            amount: '0',
+            usdValue: 0,
+            icon: '/icons/token.png',
+          };
+        }
+      };
+
+      const collateralAsset = getAssetDetails(collateralAssetAddress);
+      const loanAsset = getAssetDetails(loanAssetAddress);
+
+      return {
+        id: poolAddress,
+        poolAddress: poolAddress as Address,
+        name: name || 'Pool',
+        description: `${name || 'Pool'} - ${(Number(interestRate) / 100).toFixed(1)}% APY`,
+        borrower: borrower as Address,
+        category: 'lending',
+        riskLevel: Number(interestRate) <= 5 ? 'Low' :
+                   Number(interestRate) <= 15 ? 'Medium' : 'High' as 'Low' | 'Medium' | 'High',
+        collateralAsset,
+        loanAsset,
+        terms: {
+          interestRate: Number(interestRate),
+          loanDuration: 30 * 24 * 60 * 60, // 30 days in seconds
+          ltvRatio: 70,
+          maxLoanAmount: '0',
+          fixedRate: true,
+        },
+        metrics: {
+          totalCollateral: totalCollateral?.toString() || '0',
+          totalLiquidity: totalLiquidity?.toString() || '0',
+          totalLoaned: totalLoaned?.toString() || '0',
+          utilizationRate: Number(utilizationRate) || 0,
+          tvl: tvl?.toString() || '0',
+          supplyAPY: Number(interestRate) / 100,
+          activeLenders: 0,
+        },
+        status: {
+          active: Boolean(active),
+          loanDisbursed: Boolean(loanActive),
+          loanRepaid: false,
+          defaulted: false,
+          fundingComplete: Number(totalLiquidity) > 0,
+        },
+        timeline: {
+          createdAt: new Date(),
+          loanDisbursedAt: Boolean(loanActive) ? new Date() : null,
+          loanDueDate: null,
+          lastActivity: new Date(),
+        },
+        userSupplied: 0,
+        userBorrowed: 0,
+        canSupply: Boolean(active),
+        canBorrow: Boolean(active) && !Boolean(loanActive),
+      };
     } catch (error) {
       console.error('Failed to get pool by address:', error);
-      return null;
+      // Fallback to pools array if detailed fetch fails
+      try {
+        const pools = await this.getPools();
+        return pools.find(pool => pool.poolAddress === address) || null;
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        return null;
+      }
     }
   }
 

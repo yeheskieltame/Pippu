@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useAccount } from "wagmi"
 import {
   Transaction,
@@ -10,7 +10,7 @@ import {
 } from "@coinbase/onchainkit/transaction"
 import { type Address, parseUnits, encodeFunctionData } from "viem"
 import { CONTRACT_ADDRESSES } from "@/lib/constants"
-import { LENDING_FACTORY_ABI } from "@/lib/abi/lending-factory"
+import { LENDING_FACTORY_ABI, ERC20_ABI } from "@/lib/abi"
 import { baseSepolia } from "wagmi/chains"
 import type { LifecycleStatus } from "@coinbase/onchainkit/transaction"
 
@@ -23,6 +23,7 @@ export interface TransactionParams {
 export interface BaseTransactionProps {
   functionName: string
   args: any[]
+  tokenAddress?: Address // Optional token address for ERC20 transactions
   onSuccess?: (receipt: any) => void
   onError?: (error: any) => void
   onStatusChange?: (status: LifecycleStatus) => void
@@ -36,6 +37,7 @@ export interface BaseTransactionProps {
 export function BaseTransaction({
   functionName,
   args,
+  tokenAddress,
   onSuccess,
   onError,
   onStatusChange,
@@ -57,32 +59,37 @@ export function BaseTransaction({
       }
     }
 
-    if (functionName && typeof functionName === 'string') {
-      const functionAbi = LENDING_FACTORY_ABI.find(fn => fn.name === functionName)
-      if (!functionAbi) {
-        throw new Error(`Function ${functionName} not found in ABI`)
+    // Skip ABI validation for now to prevent infinite loop
+    // TODO: Add proper validation logic that doesn't cause re-renders
+  }
+
+  // Prepare transaction data using useMemo to prevent re-renders
+  const calls = useMemo(() => {
+    try {
+      validateArguments()
+
+      // Determine which contract and ABI to use
+      const contractAddress = tokenAddress || CONTRACT_ADDRESSES.LENDING_FACTORY
+      const abi = tokenAddress ? ERC20_ABI : LENDING_FACTORY_ABI
+
+      // Simple transaction data preparation
+      const transactionData = {
+        to: contractAddress as Address,
+        data: encodeFunctionData({
+          abi: abi,
+          functionName: functionName as any,
+          args: args as any,
+        }) as `0x${string}`,
+        ...(value && { value })
       }
+
+      return [transactionData]
+    } catch (error) {
+      console.error('Transaction preparation failed:', error)
+      setError(error instanceof Error ? error.message : 'Transaction preparation failed')
+      return []
     }
-  }
-
-  // Prepare transaction data with validation
-  const calls = []
-  try {
-    validateArguments()
-
-    calls.push({
-      to: CONTRACT_ADDRESSES.LENDING_FACTORY,
-      data: encodeFunctionData({
-        abi: LENDING_FACTORY_ABI,
-        functionName: functionName as any, // Type assertion for dynamic function names
-        args: args as any[], // Type assertion for dynamic args
-      }),
-      ...(value && { value })
-    })
-  } catch (error) {
-    console.error('Transaction preparation failed:', error)
-    setError(error instanceof Error ? error.message : 'Transaction preparation failed')
-  }
+  }, [functionName, args, tokenAddress, value])
 
   // Don't render if calls array is empty (validation failed)
   if (calls.length === 0) {
@@ -152,16 +159,15 @@ export function BaseTransaction({
           disabled={disabled || isExecuting}
           className={className}
         />
+        <TransactionToast>
+          <TransactionStatus>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span>{loadingText}</span>
+            </div>
+          </TransactionStatus>
+        </TransactionToast>
       </Transaction>
-
-      <TransactionToast>
-        <TransactionStatus>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <span>{loadingText}</span>
-          </div>
-        </TransactionStatus>
-      </TransactionToast>
 
       {/* Error Display */}
       {error && (
