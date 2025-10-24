@@ -15,18 +15,6 @@ Each borrower gets their own dedicated liquidity pool with transparent terms, se
 - ✅ **Transparent Tracking**: Real-time visibility into pool performance and health
 - ✅ **Customized Terms**: Each pool can have unique interest rates and durations
 
-**Technical Implementation:**
-```solidity
-// Each pool is a separate contract
-LiquidityPool newPool = new LiquidityPool(
-    collateralAsset,
-    loanAsset,
-    borrower,
-    interestRate,
-    loanDuration
-);
-```
-
 ### Factory Pattern Deployment
 
 **What It Is:**
@@ -37,20 +25,6 @@ Standardized pool creation through a factory contract that ensures consistent pa
 - ✅ **Easy Discovery**: Central registry of all active pools
 - ✅ **Standardized Interface**: Predictable behavior across all pools
 - ✅ **Gas Optimization**: Efficient deployment patterns
-
-**Key Functions:**
-```solidity
-function createPoolWithMetadata(
-    address collateralAsset,
-    address loanAsset,
-    uint256 collateralAmount,
-    uint256 loanAmount,
-    uint256 interestRate,
-    uint256 loanDuration,
-    string calldata description,
-    string calldata name
-) external returns (address pool);
-```
 
 ## 💰 Lending Features
 
@@ -110,21 +84,10 @@ function createPoolWithMetadata(
 ### Farcaster Native Integration
 
 **Seamless Social Sharing**
-```typescript
-// Direct pool sharing in Farcaster
-sdk.actions.share({
-  type: 'pool',
-  poolAddress: '0x...',
-  title: 'Working Capital for DeFi Project',
-  description: 'Seeking $50K for 6-month development cycle',
-})
-```
-
-**Social Identity Verification**
-- Farcaster account verification
-- Social graph analysis
-- Reputation scoring based on posting history
-- Community endorsement tracking
+- Direct pool sharing in Farcaster casts
+- Social identity verification
+- Community context display
+- Native discovery mechanisms
 
 **Social Proof Mechanics**
 - Pool visibility through social shares
@@ -136,29 +99,27 @@ sdk.actions.share({
 
 ### Event-Driven Architecture
 
-**Comprehensive Event Logging:**
-```solidity
-event PoolCreated(address indexed pool, address indexed borrower, string name);
-event LiquidityProvided(address indexed provider, uint256 amount, uint256 shares);
-event LoanDisbursed(address indexed borrower, uint256 amount);
-event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
-```
+**Comprehensive Event Logging**
+- Real-time UI updates on pool activity
+- Historical tracking for performance analysis
+- Efficient data indexing
+- Complete audit trail
 
-**Real-Time Data Sync:**
-- Instant UI updates on pool activity
+**Real-Time Data Sync**
+- Instant UI synchronization
 - Subgraph integration for efficient querying
 - Historical data analysis capabilities
 - Performance metrics tracking
 
 ### Gas Optimization
 
-**Efficient Contract Design:**
+**Efficient Contract Design**
 - Minimal storage operations
 - Optimized event structures
 - Batch operation support
 - Proxy pattern for upgrades
 
-**Transaction Batching:**
+**Transaction Batching**
 - Multiple operations in single transaction
 - Reduced gas costs for users
 - Atomic operation guarantees
@@ -168,13 +129,13 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Risk-Based Pricing
 
-**Dynamic Interest Rates:**
+**Dynamic Interest Rates**
 - Risk level assessment (Low/Medium/High)
 - Market-based rate adjustments
 - Supply/demand dynamics
 - Competition-aware pricing
 
-**Customized Loan Terms:**
+**Customized Loan Terms**
 - Flexible durations (7-90 days)
 - Asset-specific collateral requirements
 - Borrower credit history consideration
@@ -182,13 +143,13 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Liquidity Management
 
-**Provider-Friendly Features:**
+**Provider-Friendly Features**
 - Flexible withdrawal terms
 - Liquidity pool sharing
 - Automated reinvestment options
 - Portfolio management tools
 
-**Borrower Support:**
+**Borrower Support**
 - Collateral top-up capabilities
 - Early repayment options
 - Loan renewal mechanisms
@@ -198,13 +159,13 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Pool Performance Tracking
 
-**Real-Time Dashboards:**
+**Real-Time Dashboards**
 - Total Value Locked (TVL)
 - Utilization rates
 - Interest earnings
 - Default rates
 
-**Historical Analysis:**
+**Historical Analysis**
 - Pool performance over time
 - Borrower repayment history
 - Lender return metrics
@@ -212,13 +173,13 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Risk Analytics
 
-**Default Prediction:**
+**Default Prediction**
 - Machine learning models
 - Social graph analysis
 - Collateral value tracking
 - Early warning indicators
 
-**Portfolio Management:**
+**Portfolio Management**
 - Diversification recommendations
 - Risk-adjusted return metrics
 - Concentration risk analysis
@@ -228,13 +189,13 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Smart Contract Security
 
-**Audited Codebase:**
+**Audited Codebase**
 - OpenZeppelin library integration
 - Comprehensive test coverage
 - Security audit certifications
 - Bug bounty program
 
-**Economic Security:**
+**Economic Security**
 - Conservative LTV ratios
 - Liquidation protection mechanisms
 - Oracle-based price feeds
@@ -242,13 +203,13 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### User Security
 
-**Best Practice Implementation:**
+**Best Practice Implementation**
 - Multi-signature wallet support
 - Hardware wallet integration
 - Transaction simulation
 - Phishing protection
 
-**Insurance Integration:**
+**Insurance Integration**
 - Optional insurance coverage
 - Nexus Mutual integration
 - Community insurance pools
@@ -258,7 +219,7 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Automated Market Making
 
-**Liquidity Optimization:**
+**Liquidity Optimization**
 - Dynamic rate adjustments
 - Supply/demand balancing
 - Automated liquidity provision
@@ -266,7 +227,7 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Cross-Chain Compatibility
 
-**Multi-Chain Support:**
+**Multi-Chain Support**
 - Base network primary deployment
 - Ethereum mainnet bridge support
 - Layer 2 integration roadmap
@@ -274,7 +235,7 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 ### Governance Integration
 
-**Community Governance:**
+**Community Governance**
 - Protocol parameter voting
 - Risk parameter adjustments
 - Feature proposal system

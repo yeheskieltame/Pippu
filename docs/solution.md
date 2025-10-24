@@ -58,31 +58,11 @@ Pool B: $30K → DAO Y (Visible, Transparent)
 
 ### Smart Contract Architecture
 
-**Factory Pattern (`LendingFactory.sol`)**
-```solidity
-// Creates isolated pools with standardized parameters
-function createPoolWithMetadata(
-    address collateralAsset,
-    address loanAsset,
-    uint256 collateralAmount,
-    uint256 loanAmount,
-    uint256 interestRate,
-    uint256 loanDuration,
-    string calldata description,
-    string calldata name
-) external returns (address pool);
-```
+**Factory Pattern**: Central factory for creating isolated pools with standardized parameters and security enforcement.
 
-**Isolated Pool (`LiquidityPool.sol`)**
-```solidity
-// Individual pool with 70% max LTV safety
-uint256 public immutable maxLoanToValue = 7000; // 70%
+**Isolated Pool Design**: Individual pools with 70% maximum LTV safety, fixed interest rates, and time-locked collateral protection.
 
-// Real-time collateralization tracking
-function getUtilizationRate() public view returns (uint256) {
-    return totalLiquidity == 0 ? 0 : (totalLoaned * BASIS_POINTS) / totalLiquidity;
-}
-```
+**Event-Driven Transparency**: Comprehensive event logging for instant UI updates and complete audit trails.
 
 ### Key Safety Features
 
@@ -91,14 +71,6 @@ function getUtilizationRate() public view returns (uint256) {
 - **Fixed Interest Rates**: Predictable returns for lenders
 - **Time-Locked Collateral**: Prevents rug pulls
 - **Real-time Monitoring**: Instant visibility into pool health
-
-**Event-Driven Transparency:**
-```solidity
-event PoolCreated(address indexed pool, address indexed borrower, string name);
-event LiquidityProvided(address indexed provider, uint256 amount, uint256 shares);
-event LoanDisbursed(address indexed borrower, uint256 amount);
-event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
-```
 
 ## 🚀 Farcaster-Native Distribution
 
@@ -141,7 +113,7 @@ event LoanRepaid(address indexed borrower, uint256 principal, uint256 interest);
 
 **Problem Solved**: 90% of potential users excluded by DeFi complexity
 
-**Our Solution**:
+**Our Solution:**
 - **Progressive Disclosure**: Essential info first, details on demand
 - **Visual Risk Assessment**: Color-coded indicators for quick decisions
 - **Social Context**: Borrower profiles with social proof
