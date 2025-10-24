@@ -113,7 +113,18 @@ export function BaseTransaction({
   const handleError = (error: any) => {
     console.error(`${functionName} transaction error:`, error)
     setIsExecuting(false)
-    setError(error?.message || error?.error || 'Transaction failed')
+
+    // Handle specific timeout errors
+    if (error?.message?.includes('TimeoutError') || error?.name === 'TimeoutError') {
+      setError('Transaction timed out. The transaction may still be processing. Please check your wallet.')
+    } else if (error?.message?.includes('400') || error?.status === 400) {
+      setError('Network error: Bad request. Please try again.')
+    } else if (error?.message?.includes('Fetch failed')) {
+      setError('Network connection failed. Please check your internet connection and try again.')
+    } else {
+      setError(error?.message || error?.error || 'Transaction failed')
+    }
+
     onError?.(error)
   }
 
@@ -125,7 +136,16 @@ export function BaseTransaction({
       setError(null)
     } else if (status.statusName === 'error') {
       setIsExecuting(false)
-      setError(status.statusData?.message || status.statusData?.error || 'Transaction failed')
+      const errorMessage = status.statusData?.message || status.statusData?.error || 'Transaction failed'
+
+      // Handle specific error types in status
+      if (errorMessage.includes('TimeoutError') || errorMessage.includes('timeout')) {
+        setError('Transaction timed out. The transaction may still be processing. Please check your wallet.')
+      } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+        setError('Network error: Bad request. Please try again.')
+      } else {
+        setError(errorMessage)
+      }
     } else if (status.statusName === 'success') {
       setIsExecuting(false)
       setError(null)

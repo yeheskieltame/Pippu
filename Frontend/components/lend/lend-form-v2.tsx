@@ -15,6 +15,7 @@ import {
   ApproveTokenTransaction
 } from "@/components/transactions"
 import { Web3ErrorBoundary } from "@/components/common/web3-error-boundary"
+import { TransactionSuccessModal } from "@/components/common/transaction-success-modal"
 
 interface LendFormV2Props {
   onSuccess?: (action: string, data: any) => void
@@ -42,6 +43,19 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
     withdraw?: { status: 'idle' | 'pending' | 'success' | 'error'; hash?: string }
   }>({})
 
+  // Success modal state
+  const [successModal, setSuccessModal] = useState<{
+    isOpen: boolean
+    type: 'approve' | 'fund' | 'withdraw'
+    hash: string
+    amount?: string
+    poolName?: string
+  }>({
+    isOpen: false,
+    type: 'approve',
+    hash: ''
+  })
+
   // Get pools data from contract
   const { pools, isLoading, error, refetch } = usePoolsFromContract()
 
@@ -60,7 +74,7 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
   )
 
   // Get user balance in selected pool
-  const { data: userBalance, refetch: refetchUserBalance } = useReadContract({
+  const { data: userBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.LENDING_FACTORY,
     abi: LENDING_FACTORY_ABI,
     functionName: 'getProviderBalance',
@@ -70,6 +84,7 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
     }
   })
 
+  
   // Calculate earnings
   const estimatedMonthlyEarnings = selectedPool
     ? (depositAmount * selectedPool.metrics.supplyAPY / 100) / 12
@@ -79,13 +94,14 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
     ? parseFloat(userBalance.toString()) / Math.pow(10, 6)
     : 0
 
-  const canFund = selectedPool && depositAmount >= 100 && !!selectedPool?.loanAsset?.address && !!selectedPool?.id
+  const canFund = selectedPool && depositAmount >= 100 && !!selectedPool?.loanAsset?.address && !!selectedPool?.id && transactions.approve?.status === 'success'
   const canWithdraw = userBalanceFormatted > 0 && withdrawAmount <= userBalanceFormatted
 
   // Transaction handlers
   const handleApproveSuccess = (receipt: any) => {
     setTransactions(prev => ({ ...prev, approve: { status: 'success', hash: receipt.transactionReceipts[0].transactionHash } }))
     onSuccess?.('approve', receipt)
+    // Don't show modal for approve - only for fund/withdraw
   }
 
   const handleApproveError = (error: any) => {
@@ -96,8 +112,15 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
   const handleFundSuccess = (receipt: any) => {
     setTransactions(prev => ({ ...prev, fund: { status: 'success', hash: receipt.transactionReceipts[0].transactionHash } }))
     onSuccess?.('fund', receipt)
-    refetch() // Refetch pools
-    refetchUserBalance()
+
+    // Show success modal instead of refetching
+    setSuccessModal({
+      isOpen: true,
+      type: 'fund',
+      hash: receipt.transactionReceipts[0].transactionHash,
+      amount: depositAmount.toString(),
+      poolName: selectedPool?.name
+    })
   }
 
   const handleFundError = (error: any) => {
@@ -108,8 +131,15 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
   const handleWithdrawSuccess = (receipt: any) => {
     setTransactions(prev => ({ ...prev, withdraw: { status: 'success', hash: receipt.transactionReceipts[0].transactionHash } }))
     onSuccess?.('withdraw', receipt)
-    refetch() // Refetch pools
-    refetchUserBalance()
+
+    // Show success modal instead of refetching
+    setSuccessModal({
+      isOpen: true,
+      type: 'withdraw',
+      hash: receipt.transactionReceipts[0].transactionHash,
+      amount: withdrawAmount.toString(),
+      poolName: selectedPool?.name
+    })
   }
 
   const handleWithdrawError = (error: any) => {
@@ -119,6 +149,13 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
 
   const resetTransactions = () => {
     setTransactions({})
+  }
+
+  const handleCloseSuccessModal = () => {
+    setSuccessModal(prev => ({ ...prev, isOpen: false }))
+    // Only refetch after modal is closed, not during transaction success
+    refetch()
+    resetTransactions()
   }
 
   if (!mounted) {
@@ -516,6 +553,16 @@ export function LendFormV2({ onSuccess, onError }: LendFormV2Props) {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <TransactionSuccessModal
+        isOpen={successModal.isOpen}
+        onClose={handleCloseSuccessModal}
+        transactionType={successModal.type}
+        transactionHash={successModal.hash}
+        amount={successModal.amount}
+        poolName={successModal.poolName}
+      />
     </Web3ErrorBoundary>
   )
 }
