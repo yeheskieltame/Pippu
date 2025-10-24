@@ -30,7 +30,11 @@ const wagmiConfig = createConfig({
     }),
   ],
   transports: {
-    [baseSepolia.id]: http(),
+    [baseSepolia.id]: http('https://sepolia.base.org', {
+      retryCount: 3,
+      retryDelay: 1000,
+      timeout: 30000, // 30 seconds
+    }),
   },
 });
 

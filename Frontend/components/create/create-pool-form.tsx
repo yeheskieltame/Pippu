@@ -1,16 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { formatCurrency } from "@/lib/utils/format"
+import { formatTokenAmount } from "@/lib/utils"
+import { TokenSelect } from "@/components/common/token-select"
+import { Web3ErrorBoundary } from "@/components/common/web3-error-boundary"
+import { CreatePoolTransaction } from "@/components/create/create-pool-transaction"
+import { MOCK_TOKEN_CONFIG, MOCK_TOKEN_METADATA } from "@/lib/constants/mock-tokens"
+import { type Address, parseUnits } from "viem"
+import { useReadContract } from "wagmi"
 
 export function CreatePoolForm() {
   const { isConnected, address } = useAccount()
+
+  // Fix hydration by using useEffect for client-side only state
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    collateralAsset: "ETH",
-    loanAsset: "USDC",
+    collateralToken: MOCK_TOKEN_CONFIG.mWETH as Address,
+    loanToken: MOCK_TOKEN_CONFIG.mUSDC as Address,
     collateralAmount: 1,
     loanAmountRequested: 2000,
     interestRate: 12, // 12% annually
@@ -18,34 +33,142 @@ export function CreatePoolForm() {
     riskLevel: "Medium" as "Low" | "Medium" | "High"
   })
 
-  // ETH price assumption for MVP
-  const ETH_PRICE = 3835.61
+  const [poolCreated, setPoolCreated] = useState(false)
+  const [createdPoolAddress, setCreatedPoolAddress] = useState<Address | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // Get user balance for collateral token using useReadContract (working version)
+  const { data: collateralBalance } = useReadContract({
+    address: formData.collateralToken,
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "account",
+            type: "address"
+          }
+        ],
+        name: "balanceOf",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256"
+          }
+        ],
+        stateMutability: "view",
+        type: "function"
+      }
+    ],
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isConnected && !!address,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 3
+    }
+  })
+
+  
+  // Get token decimals from metadata - using mock tokens
+  const getTokenDecimals = (tokenAddress: Address) => {
+    const tokenMetadata = {
+      [MOCK_TOKEN_CONFIG.mWETH]: 18,
+      [MOCK_TOKEN_CONFIG.mUSDC]: 6,
+      [MOCK_TOKEN_CONFIG.mDAI]: 18,
+    }
+    return tokenMetadata[tokenAddress] || 18
+  }
+
+  // Get token metadata for display
+  const getTokenMetadata = (tokenAddress: Address) => {
+    return MOCK_TOKEN_METADATA[tokenAddress] || {
+      symbol: "UNKNOWN",
+      name: "Unknown Token",
+      decimals: 18,
+      color: "#gray",
+      icon: ""
+    }
+  }
+
+  
+  // ETH price will be fetched from oracle in production
+  // For MVP, using temporary price - TODO: Replace with price oracle
+  const getETHPrice = () => 3835.61; // Temporary fallback
   const MAX_LTV = 0.7 // 70%
 
-  const collateralValue = formData.collateralAmount * ETH_PRICE
+  const collateralValue = formData.collateralAmount * getETHPrice()
   const maxLoanAmount = collateralValue * MAX_LTV
   const isValidLoanAmount = formData.loanAmountRequested <= maxLoanAmount
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // TODO: Implement contract call to create pool
-    console.log("Creating pool with data:", formData)
+  // Proper balance checking with decimal precision using parseUnits
+  const collateralDecimals = getTokenDecimals(formData.collateralToken)
+  const hasSufficientBalance = collateralBalance
+    ? collateralBalance >= parseUnits(formData.collateralAmount.toString(), collateralDecimals)
+    : false
+
+  // Form validation
+  const isFormValid =
+    formData.name &&
+    formData.description &&
+    isValidLoanAmount &&
+    hasSufficientBalance
+
+  // Handle pool creation success
+  const handlePoolCreated = (poolAddress: Address) => {
+    setPoolCreated(true)
+    setCreatedPoolAddress(poolAddress)
+    setError(null)
   }
 
+  // Handle pool creation error
+  const handlePoolError = (error: Error) => {
+    setError(error.message)
+    setPoolCreated(false)
+    setCreatedPoolAddress(null)
+  }
+
+  // Reset form
+  const handleReset = () => {
+    setFormData({
+      name: "",
+      description: "",
+      collateralToken: MOCK_TOKEN_CONFIG.mWETH,
+      loanToken: MOCK_TOKEN_CONFIG.mUSDC,
+      collateralAmount: 1,
+      loanAmountRequested: 2000,
+      interestRate: 12,
+      loanDuration: 30,
+      riskLevel: "Medium"
+    })
+    setPoolCreated(false)
+    setCreatedPoolAddress(null)
+    setError(null)
+  }
+
+  
   if (!isConnected) {
     return (
       <div className="card-glass animate-bounce-in p-6" style={{ animationDelay: "0.3s" }}>
-        <h3 className="text-2xl text-heading mb-4">Create Borrowing Pool</h3>
+        <h3 className="text-2xl text-heading mb-4">Create Pool</h3>
         <p className="text-center text-neutral-600">Please connect your wallet to create a pool</p>
       </div>
     )
   }
 
-  return (
-    <div className="card-glass animate-bounce-in" style={{ animationDelay: "0.3s" }}>
-      <h3 className="text-2xl text-heading mb-6">Create Borrowing Pool</h3>
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!mounted) {
+    return null // Return null instead of skeleton to avoid hydration mismatch
+  }
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+  return (
+    <Web3ErrorBoundary>
+      <div className="card-glass animate-bounce-in" style={{ animationDelay: "0.3s" }}>
+      <h3 className="text-2xl text-heading mb-6">Create Pool</h3>
+
+      <div className="space-y-6">
         {/* Pool Information */}
         <div className="space-y-4">
           <div>
@@ -116,15 +239,11 @@ export function CreatePoolForm() {
             Collateral Information
           </h4>
           <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-purple-800 mb-1">Collateral Asset</label>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">ETH</span>
-                </div>
-                <span className="text-sm font-medium text-purple-900">Ethereum (ETH)</span>
-              </div>
-            </div>
+            <TokenSelect
+              selectedToken={formData.collateralToken}
+              onTokenSelect={(token) => setFormData(prev => ({ ...prev, collateralToken: token }))}
+              label="Collateral Asset"
+            />
             <div>
               <label className="block text-xs text-purple-800 mb-1">Collateral Amount</label>
               <input
@@ -137,8 +256,18 @@ export function CreatePoolForm() {
                 required
               />
             </div>
-            <div className="text-xs text-purple-800">
-              Collateral Value: {formatCurrency(collateralValue)}
+            <div className="space-y-1">
+              <div className="text-xs text-purple-800">
+                Collateral Value: {formatCurrency(collateralValue)}
+              </div>
+              <div className="text-xs text-purple-800">
+                Your Balance: {collateralBalance ? formatTokenAmount(collateralBalance, getTokenDecimals(formData.collateralToken)) : '0.00'} {getTokenMetadata(formData.collateralToken).symbol}
+              </div>
+              {!hasSufficientBalance && (
+                <div className="text-xs text-red-600 font-medium">
+                  ⚠️ Insufficient balance
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -214,13 +343,13 @@ export function CreatePoolForm() {
             <div className="flex justify-between">
               <span className="text-blue-800">Collateral:</span>
               <span className="font-bold text-blue-600">
-                {formData.collateralAmount} ETH ({formatCurrency(collateralValue)})
+                {formData.collateralAmount} {getTokenMetadata(formData.collateralToken).symbol} ({formatCurrency(collateralValue)})
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-blue-800">Loan Amount:</span>
               <span className="font-bold text-blue-600">
-                {formatCurrency(formData.loanAmountRequested)}
+                {formData.loanAmountRequested} {getTokenMetadata(formData.loanToken).symbol} ({formatCurrency(formData.loanAmountRequested)})
               </span>
             </div>
             <div className="flex justify-between">
@@ -251,7 +380,7 @@ export function CreatePoolForm() {
             Important Terms
           </h4>
           <ul className="text-xs text-yellow-800 space-y-1" style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}>
-            <li>• Your ETH will be locked as collateral until loan repayment</li>
+            <li>• Your {getTokenMetadata(formData.collateralToken).symbol} will be locked as collateral until loan repayment</li>
             <li>• Maximum loan is 70% of collateral value</li>
             <li>• Interest accrues daily based on annual rate</li>
             <li>• Late payments may result in collateral liquidation</li>
@@ -259,18 +388,76 @@ export function CreatePoolForm() {
           </ul>
         </div>
 
+        {/* Status Messages */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-sm text-red-800">
+              <span className="font-semibold">Error:</span> {error}
+            </p>
+            <button
+              onClick={handleReset}
+              className="mt-3 w-full px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {poolCreated && createdPoolAddress && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <p className="text-sm text-green-800 font-medium">
+              🎉 Pool created successfully!
+            </p>
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-green-700">
+                <strong>Pool Address:</strong> {createdPoolAddress}
+              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-green-700">
+                  <strong>Network:</strong> Base Sepolia Testnet
+                </p>
+                <a
+                  href={`https://sepolia.basescan.org/address/${createdPoolAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-green-600 hover:text-green-800 underline"
+                >
+                  View on Explorer
+                </a>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={handleReset}
+                className="flex-1 px-3 py-1 text-xs bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                Create Another Pool
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Submit Button */}
-        <button
-          type="submit"
-          className="btn-primary w-full"
-          disabled={!isValidLoanAmount || !formData.name || !formData.description}
-        >
-          {!isValidLoanAmount ? 'Adjust Loan Amount' :
-           !formData.name ? 'Enter Pool Name' :
-           !formData.description ? 'Enter Description' :
-           'Create Pool & Lock Collateral'}
-        </button>
-      </form>
-    </div>
+        {!poolCreated && (
+          <CreatePoolTransaction
+            params={{
+              name: formData.name,
+              description: formData.description,
+              collateralToken: formData.collateralToken,
+              loanToken: formData.loanToken,
+              collateralAmount: formData.collateralAmount,
+              loanAmountRequested: formData.loanAmountRequested,
+              interestRate: formData.interestRate,
+              loanDuration: formData.loanDuration,
+              riskLevel: formData.riskLevel
+            }}
+            onSuccess={handlePoolCreated}
+            onError={handlePoolError}
+            disabled={!isFormValid}
+          />
+        )}
+      </div>
+      </div>
+    </Web3ErrorBoundary>
   )
 }

@@ -11,7 +11,7 @@ import { createContractDataStore } from '@/lib/data/contract-repository';
 import { Pool, PoolFilters, SortOption, CreatePoolParams } from '@/lib/types';
 
 // Configuration: Switch between mock and real data
-const USE_MOCK_DATA = false; // Now using real contract data with wagmi
+const USE_MOCK_DATA = true; // Temporarily use mock data until wagmi integration fixed
 
 // Get appropriate data store
 const dataStore = USE_MOCK_DATA ? mockDataStore : createContractDataStore();

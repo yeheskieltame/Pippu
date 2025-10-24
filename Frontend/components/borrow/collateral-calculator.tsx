@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { usePools, useBorrowingPower } from "@/hooks/use-data"
+import { usePools, useBorrowingPower } from "@/lib/hooks/use-data"
 import { formatCurrency } from "@/lib/utils/index"
 
 export function CollateralCalculator() {

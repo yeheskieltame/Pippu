@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
-import { useUserPortfolio } from "@/hooks/use-data"
+import { useUserPortfolio } from "@/lib/hooks/use-data"
 import { formatCurrency } from "@/lib/utils/index"
 import { WalletConnect } from "@/components/wallet/wallet-connect"
 

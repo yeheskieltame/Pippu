@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, TrendingUp, Clock, Users } from "lucide-react"
-import { usePools } from "@/hooks/use-data"
+import { usePools } from "@/lib/hooks/use-data"
 import { formatCurrency, formatPercent } from "@/lib/utils/index"
 import { Pool } from "@/lib/types"
 

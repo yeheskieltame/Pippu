@@ -6,6 +6,7 @@ import { useBalance } from "wagmi"
 import { formatTokenAmount } from "@/lib/utils"
 import { MOCK_TOKEN_CONFIG, MOCK_TOKEN_METADATA } from "@/lib/constants/mock-tokens"
 import { type Address } from "viem"
+import { TokenIcon } from "@/components/common/token-icon"
 
 
 // Simplified ABI for TokenFaucet
@@ -392,11 +393,13 @@ export function FaucetCard() {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: `${token.color}20` }}
-                  >
-                    {token.icon}
+                  <div className="bg-white rounded-xl flex items-center justify-center p-2">
+                    <TokenIcon
+                      icon={token.icon}
+                      symbol={token.symbol}
+                      color={token.color}
+                      fallback="💧"
+                    />
                   </div>
                   <div>
                     <h4 className="font-bold text-heading">{token.symbol}</h4>
@@ -461,7 +464,15 @@ export function FaucetCard() {
               className="p-2 text-center border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-all duration-300"
               onClick={() => handleMintTokens(token.tokenAddress)}
             >
-              <div className="text-lg mb-1">{token.icon}</div>
+              <div className="flex justify-center mb-1">
+                <TokenIcon
+                  icon={token.icon}
+                  symbol={token.symbol}
+                  color={token.color}
+                  size="small"
+                  fallback="💧"
+                />
+              </div>
               <div className="text-xs font-medium">{token.symbol}</div>
               <div className="text-xs text-neutral-600">Mint</div>
             </button>

@@ -1,35 +1,42 @@
 import { createPublicClient, http } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
 import type { Address } from 'viem';
+import { MOCK_TOKEN_CONFIG, MOCK_TOKEN_METADATA } from './mock-tokens';
 
 // Contract addresses on Base Sepolia
 export const CONTRACT_ADDRESSES = {
   LENDING_FACTORY: '0x977C91fEed2d4FF77AEeeD1bFb2a6f51b2A518F5' as Address,
 } as const;
 
-// Token addresses on Base Sepolia
+// Use mock tokens for development
 export const TOKEN_ADDRESSES = {
-  WETH: '0x4200000000000000000000000000000000000006' as Address,
-  USDC: '0x036CBD5429286c61B3596927D7A3A475f7b3EE9c' as Address,
-  USDbC: '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA' as Address,
+  WETH: MOCK_TOKEN_CONFIG.mWETH as Address,
+  USDC: MOCK_TOKEN_CONFIG.mUSDC as Address,
+  DAI: MOCK_TOKEN_CONFIG.mDAI as Address,
 } as const;
 
-// Token metadata
+// Token metadata using mock tokens with icons
 export const TOKEN_METADATA = {
   [TOKEN_ADDRESSES.WETH]: {
-    symbol: 'WETH',
-    name: 'Wrapped Ether',
+    symbol: 'mWETH',
+    name: 'Mock Wrapped Ether',
     decimals: 18,
+    icon: '/weth.png',
+    color: '#627EEA',
   },
   [TOKEN_ADDRESSES.USDC]: {
-    symbol: 'USDC',
-    name: 'USD Coin',
+    symbol: 'mUSDC',
+    name: 'Mock USD Coin',
     decimals: 6,
+    icon: '/usdc.png',
+    color: '#2775CA',
   },
-  [TOKEN_ADDRESSES.USDbC]: {
-    symbol: 'USDbC',
-    name: 'Base USD',
-    decimals: 6,
+  [TOKEN_ADDRESSES.DAI]: {
+    symbol: 'mDAI',
+    name: 'Mock DAI Stablecoin',
+    decimals: 18,
+    icon: '/dai.png',
+    color: '#F5AC37',
   },
 } as const;
 
@@ -87,7 +94,7 @@ export const TOKEN_DECIMALS = {
   ETH: 18,
   WETH: 18,
   USDC: 6,
-  USDbC: 6,
+  DAI: 18,
 } as const;
 
 // Type exports

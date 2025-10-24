@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, ExternalLink } from "lucide-react"
-import { useTransactions } from "@/hooks/use-data"
+import { useTransactions } from "@/lib/hooks/use-data"
 import { formatRelativeTime, formatCurrency } from "@/lib/utils/index"
 
 export function ActivityTimeline() {

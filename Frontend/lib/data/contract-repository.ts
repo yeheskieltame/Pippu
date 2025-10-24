@@ -7,7 +7,7 @@
 import { Address } from 'viem';
 import { IPoolRepository, ITransactionRepository, IUserRepository, IMarketRepository, Pool, Transaction } from '../types';
 import { LENDING_FACTORY_ABI, LIQUIDITY_POOL_ABI, ERC20_ABI } from '../abi';
-import { getContractAddress } from '../contracts';
+import { CONTRACT_ADDRESSES } from '../constants';
 
 // ============================================================================
 // PRODUCTION POOL REPOSITORY
@@ -32,7 +32,7 @@ export class ContractPoolRepository implements IPoolRepository {
 
       // Get pools from factory contract
       const pools = await wagmiClient.readContract({
-        address: getContractAddress('LENDING_FACTORY', 84532) as Address,
+        address: CONTRACT_ADDRESSES.LENDING_FACTORY,
         abi: LENDING_FACTORY_ABI,
         functionName: 'getActivePoolsPaginated',
         args: [0, 50], // offset, limit

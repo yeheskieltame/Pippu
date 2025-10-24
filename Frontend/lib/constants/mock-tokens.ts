@@ -1,3 +1,5 @@
+import { type Address } from "viem"
+
 // Mock token configuration for testing
 // Update these addresses after deployment
 
@@ -16,7 +18,7 @@ export const MOCK_TOKEN_METADATA = {
     name: 'Mock Wrapped Ether',
     decimals: 18,
     color: '#627EEA',
-    icon: '🔷',
+    icon: '/weth.png',
     isMock: true,
     claimAmount: '100 mWETH',
   },
@@ -25,7 +27,7 @@ export const MOCK_TOKEN_METADATA = {
     name: 'Mock USD Coin',
     decimals: 6,
     color: '#2775CA',
-    icon: '💵',
+    icon: '/usdc.png',
     isMock: true,
     claimAmount: '10,000 mUSDC',
   },
@@ -34,7 +36,7 @@ export const MOCK_TOKEN_METADATA = {
     name: 'Mock DAI Stablecoin',
     decimals: 18,
     color: '#F5AC37',
-    icon: '💰',
+    icon: '/dai.png',
     isMock: true,
     claimAmount: '10,000 mDAI',
   },

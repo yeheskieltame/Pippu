@@ -2,13 +2,21 @@
 
 import { useState } from "react"
 import { useAccount } from "wagmi"
-import { usePools } from "@/hooks/use-data"
+import { usePools } from "@/lib/hooks/use-data"
+import { useBorrow } from "@/lib/hooks/useBorrow"
 import { formatCurrency, formatPercent } from "@/lib/utils/format"
+import { useReadContract } from "wagmi"
+import { type Address } from "viem"
+import { LENDING_FACTORY_ABI } from "@/lib/abi/lending-factory"
+import { CONTRACT_ADDRESSES } from "@/lib/constants"
 
 export function BorrowForm() {
   const { isConnected, address } = useAccount()
   const [borrowAmount, setBorrowAmount] = useState(500)
   const [selectedPoolId, setSelectedPoolId] = useState("")
+
+  // Borrow hooks
+  const { state, executeBorrow, reset, repayLoan: repayLoanHook } = useBorrow()
 
   // Get pools data - should show user's created pools
   const { data: pools = [], isLoading } = usePools()
@@ -25,21 +33,36 @@ export function BorrowForm() {
 
   const selectedPool = userPools.find(pool => pool.id === selectedPoolId)
 
+  // Read real pool data from contract
+  const { data: poolDetails } = useReadContract({
+    address: CONTRACT_ADDRESSES.LENDING_FACTORY,
+    abi: LENDING_FACTORY_ABI,
+    functionName: 'getPoolDetails',
+    args: selectedPool ? [selectedPool.id as Address] : undefined,
+    enabled: !!selectedPool?.id
+  })
+
   // ETH price assumption for MVP
   const ETH_PRICE = 3835.61
   const MAX_LTV = 0.7
 
-  // Calculate borrowing power for selected pool
+  // Calculate borrowing power for selected pool using real contract data
   const getPoolBorrowingPower = (pool: any) => {
-    if (!pool) return { maxBorrow: 0, available: 0, collateralValue: 0 }
+    if (!pool || !poolDetails) return { maxBorrow: 0, available: 0, collateralValue: 0 }
 
-    // Calculate collateral value based on pool data
-    const collateralValue = parseFloat(pool.metrics.totalCollateral) * ETH_PRICE
+    // Use real contract data
+    const totalCollateral = parseFloat(poolDetails[2] || '0') // totalCollateral
+    const totalLiquidity = parseFloat(poolDetails[3] || '0') // totalLiquidity
+    const totalLoaned = parseFloat(poolDetails[4] || '0') // totalLoaned
+
+    // Assuming WETH as collateral (18 decimals)
+    const collateralValue = (totalCollateral / Math.pow(10, 18)) * ETH_PRICE
     const maxBorrow = collateralValue * MAX_LTV
 
-    // Available amount is max borrow minus what's already borrowed
-    const alreadyBorrowed = parseFloat(pool.metrics.totalLoaned) || 0
-    const available = maxBorrow - alreadyBorrowed
+    // Available amount is min(liquidity available, max borrow minus already borrowed)
+    const availableLiquidity = totalLiquidity / Math.pow(10, 6) // Assuming USDC (6 decimals)
+    const borrowCapacity = maxBorrow - (totalLoaned / Math.pow(10, 6))
+    const available = Math.min(availableLiquidity, borrowCapacity)
 
     return { maxBorrow, available, collateralValue }
   }
@@ -47,15 +70,50 @@ export function BorrowForm() {
   const borrowingPower = selectedPool ? getPoolBorrowingPower(selectedPool) : { maxBorrow: 0, available: 0, collateralValue: 0 }
   const canBorrow = selectedPool && borrowAmount <= borrowingPower.available && borrowingPower.available > 0
 
-  // Interest calculation
+  // Interest calculation using real contract data
   const calculateInterest = (amount: number, rate: number, days: number) => {
     const dailyRate = rate / 100 / 365
     return amount * dailyRate * days
   }
 
   const loanDuration = selectedPool?.terms.loanDuration ? selectedPool.terms.loanDuration / (24 * 60 * 60) : 30 // Convert seconds to days
-  const interest = calculateInterest(borrowAmount, selectedPool?.terms.interestRate || 12, loanDuration)
+  const interestRate = poolDetails ? parseFloat(poolDetails[5] || '0') / 100 : (selectedPool?.terms.interestRate || 12) // Convert from basis points
+  const interest = calculateInterest(borrowAmount, interestRate, loanDuration)
   const totalToRepay = borrowAmount + interest
+
+  // Handle borrow action
+  const handleBorrow = async () => {
+    if (!canBorrow || !selectedPool) return
+
+    // Execute borrow flow: approve collateral -> deposit -> disburse
+    // For MVP, we'll assume collateral is already locked in the pool
+    const success = await executeBorrow(
+      selectedPool.id as Address,
+      selectedPool.collateralAsset as Address,
+      parseFloat(selectedPool.metrics.totalCollateral) // Use existing collateral amount
+    )
+
+    if (success) {
+      // Reset after successful borrow
+      setTimeout(() => {
+        reset()
+      }, 3000)
+    }
+  }
+
+  // Handle repayment
+  const handleRepay = async () => {
+    if (!selectedPool) return
+
+    const success = await repayLoanHook(selectedPool.id as Address, totalToRepay)
+
+    if (success) {
+      // Reset after successful repayment
+      setTimeout(() => {
+        reset()
+      }, 3000)
+    }
+  }
 
   if (!isConnected) {
     return (
@@ -289,6 +347,44 @@ export function BorrowForm() {
           </ul>
         </div>
 
+        {/* Status Messages */}
+        {state.error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-sm text-red-800">
+              <span className="font-semibold">Error:</span> {state.error}
+            </p>
+          </div>
+        )}
+
+        {state.success && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <p className="text-sm text-green-800 font-medium">
+              🎉 {state.currentStep === 'completed' ? 'Transaction completed successfully!' : 'Transaction in progress...'}
+            </p>
+            <button
+              onClick={reset}
+              className="mt-2 w-full px-3 py-1 text-xs bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              New Transaction
+            </button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {(state.isApproving || state.isDepositing || state.isDisbursing || state.isRepaying) && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm text-blue-800">
+                {state.isApproving && 'Approving collateral...'}
+                {state.isDepositing && 'Depositing collateral...'}
+                {state.isDisbursing && 'Disbursing loan...'}
+                {state.isRepaying && 'Repaying loan...'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Borrow Button */}
         <button
           className={`w-full py-3 rounded-2xl font-semibold transition-all duration-300 ${
@@ -297,24 +393,33 @@ export function BorrowForm() {
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
           style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
-          disabled={!canBorrow}
-          onClick={() => {
-            if (canBorrow) {
-              // TODO: Implement contract call to disburse loan
-              console.log("Borrowing:", {
-                poolId: selectedPoolId,
-                amount: borrowAmount,
-                totalRepayment: totalToRepay
-              })
-            }
-          }}
+          disabled={!canBorrow || state.isApproving || state.isDepositing || state.isDisbursing}
+          onClick={handleBorrow}
         >
           {!canBorrow ? (
             borrowingPower.available <= 0 ? 'Pool Not Funded' : 'Adjust Borrow Amount'
-          ) : (
-            `Borrow ${formatCurrency(borrowAmount)}`
-          )}
+          ) : state.isApproving ? 'Approving...' :
+           state.isDepositing ? 'Depositing...' :
+           state.isDisbursing ? 'Disbursing...' :
+           `Borrow ${formatCurrency(borrowAmount)}`
+          }
         </button>
+
+        {/* Repay Button - Show if loan is active */}
+        {selectedPool && poolDetails && poolDetails[6] /* loanActive */ && (
+          <button
+            className={`w-full py-3 rounded-2xl font-semibold transition-all duration-300 ${
+              state.isRepaying
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+            }`}
+            style={{ fontFamily: "var(--font-fredoka), system-ui, sans-serif" }}
+            disabled={state.isRepaying}
+            onClick={handleRepay}
+          >
+            {state.isRepaying ? 'Repaying...' : `Repay ${formatCurrency(totalToRepay)}`}
+          </button>
+        )}
       </div>
     </div>
   )
