@@ -28,34 +28,55 @@ export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = "https://www.pippu.xyz"
 
   return {
-    title: "Pippu - DeFi Lending Protocol",
-    description: "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
-    keywords: ["DeFi", "lending", "borrowing", "Base", "crypto", "yield", "APY", "Pippu"],
+    title: {
+      default: "Pippu - DeFi Lending Protocol on Base",
+      template: "%s | Pippu - DeFi Lending"
+    },
+    description: "Pippu is a cute and friendly DeFi lending protocol on Base chain. Supply crypto assets and earn competitive APY, or borrow against your collateral. Safe, transparent, and user-friendly decentralized finance platform.",
+    keywords: [
+      "DeFi", "lending protocol", "borrowing", "Base chain", "crypto", "yield farming",
+      "APY", "Pippu", "decentralized finance", "crypto lending", "borrow crypto",
+      "earn interest crypto", "Base blockchain", "Ethereum L2", "DeFi platform",
+      "crypto savings", "collateralized loans", "flash loans", "liquidity mining"
+    ],
     authors: [{ name: "Pippu Team" }],
     creator: "Pippu",
     publisher: "Pippu",
     metadataBase: new URL(baseUrl),
+    icons: {
+      icon: '/icon.ico',
+      shortcut: '/icon.ico',
+      apple: '/icon.png',
+    },
     openGraph: {
       type: "website",
       locale: "en_US",
       url: baseUrl,
-      title: "Pippu - DeFi Lending Protocol",
-      description: "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+      title: "Pippu - DeFi Lending Protocol on Base",
+      description: "Earn competitive APY on your crypto assets with Pippu - the cutest DeFi lending protocol on Base chain. Supply, borrow, and grow your digital assets safely.",
       siteName: "Pippu",
       images: [
         {
           url: `${baseUrl}/og-image.png`,
           width: 1200,
           height: 630,
-          alt: "Pippu - DeFi Lending Protocol",
+          alt: "Pippu - DeFi Lending Protocol on Base Chain",
+        },
+        {
+          url: `${baseUrl}/image.png`,
+          width: 800,
+          height: 800,
+          alt: "Pippu Mascot - DeFi Protocol",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Pippu - DeFi Lending Protocol",
-      description: "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+      title: "Pippu - DeFi Lending Protocol on Base 🐷",
+      description: "The cutest way to earn yield in DeFi! Supply assets, earn competitive APY, or borrow against your collateral on Base chain. #DeFi #Base #CryptoYield",
       images: [`${baseUrl}/og-image.png`],
+      creator: "@PippuDeFi", // Update with actual Twitter handle
+      site: "@PippuDeFi", // Update with actual Twitter handle
     },
     robots: {
       index: true,
@@ -83,6 +104,45 @@ export async function generateMetadata(): Promise<Metadata> {
           },
         },
       }),
+      // Structured Data for SEO
+      'application/ld+json': JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FinancialService",
+        "name": "Pippu - DeFi Lending Protocol",
+        "description": "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+        "url": baseUrl,
+        "logo": `${baseUrl}/icon.png`,
+        "image": `${baseUrl}/og-image.png`,
+        "provider": {
+          "@type": "Organization",
+          "name": "Pippu Team",
+          "url": baseUrl
+        },
+        "serviceType": "DeFi Lending and Borrowing",
+        "areaServed": "Worldwide",
+        "offers": {
+          "@type": "Offer",
+          "description": "Supply crypto assets and earn competitive APY, or borrow against your collateral",
+          "category": "Decentralized Finance"
+        },
+        "additionalProperty": [
+          {
+            "@type": "PropertyValue",
+            "name": "Blockchain",
+            "value": "Base"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "Protocol Type",
+            "value": "Lending Protocol"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "Features",
+            "value": "Supply, Borrow, Earn Interest"
+          }
+        ]
+      })
     },
   }
 }
