@@ -32,12 +32,14 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "Pippu - DeFi Lending Protocol on Base",
       template: "%s | Pippu - DeFi Lending"
     },
-    description: "Pippu is a cute and friendly DeFi lending protocol on Base chain. Supply crypto assets and earn competitive APY, or borrow against your collateral. Safe, transparent, and user-friendly decentralized finance platform.",
+    description: "Pippu is a cute and friendly DeFi lending protocol on Base chain. Supply crypto assets and earn competitive APY, or borrow against your collateral. Safe, transparent, and user-friendly decentralized finance platform. Also known as Pippu Finance, Pippu DeFi, and Finance Base.",
     keywords: [
       "DeFi", "lending protocol", "borrowing", "Base chain", "crypto", "yield farming",
       "APY", "Pippu", "decentralized finance", "crypto lending", "borrow crypto",
       "earn interest crypto", "Base blockchain", "Ethereum L2", "DeFi platform",
-      "crypto savings", "collateralized loans", "flash loans", "liquidity mining"
+      "crypto savings", "collateralized loans", "flash loans", "liquidity mining",
+      "pippu finance", "finance base", "pippu base", "pipu defi", "pipu base", "pipu finance",
+      "Pippu DeFi", "Base DeFi", "Base lending", "Base borrowing", "DeFi Base chain"
     ],
     authors: [{ name: "Pippu Team" }],
     creator: "Pippu",
@@ -53,7 +55,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_US",
       url: baseUrl,
       title: "Pippu - DeFi Lending Protocol on Base",
-      description: "Earn competitive APY on your crypto assets with Pippu - the cutest DeFi lending protocol on Base chain. Supply, borrow, and grow your digital assets safely.",
+      description: "Earn competitive APY on your crypto assets with Pippu - the cutest DeFi lending protocol on Base chain. Supply, borrow, and grow your digital assets safely. Also known as Pippu Finance and Finance Base.",
       siteName: "Pippu",
       images: [
         {
@@ -73,7 +75,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: "Pippu - DeFi Lending Protocol on Base 🐷",
-      description: "The cutest way to earn yield in DeFi! Supply assets, earn competitive APY, or borrow against your collateral on Base chain. #DeFi #Base #CryptoYield",
+      description: "The cutest way to earn yield in DeFi! Supply assets, earn competitive APY, or borrow against your collateral on Base chain. Pippu Finance, Finance Base, Base DeFi. #DeFi #Base #CryptoYield #PippuDeFi",
       images: [`${baseUrl}/og-image.png`],
       creator: "@PippuDeFi", // Update with actual Twitter handle
       site: "@PippuDeFi", // Update with actual Twitter handle
@@ -109,7 +111,8 @@ export async function generateMetadata(): Promise<Metadata> {
         "@context": "https://schema.org",
         "@type": "FinancialService",
         "name": "Pippu - DeFi Lending Protocol",
-        "description": "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
+        "alternateName": ["Pippu Finance", "Pippu DeFi", "Finance Base", "Pippu Base", "Pipu DeFi", "Pipu Base", "Pipu Finance"],
+        "description": "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral. Also known as Pippu Finance and Finance Base.",
         "url": baseUrl,
         "logo": [
           {
@@ -169,7 +172,7 @@ export async function generateMetadata(): Promise<Metadata> {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Pippu",
-        "alternateName": "Pippu DeFi",
+        "alternateName": ["Pippu DeFi", "Pippu Finance", "Finance Base", "Pippu Base", "Pipu DeFi", "Pipu Base", "Pipu Finance"],
         "url": baseUrl,
         "logo": {
           "@type": "ImageObject",
