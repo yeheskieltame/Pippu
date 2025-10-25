@@ -8,133 +8,6 @@ import { MOCK_TOKEN_CONFIG, MOCK_TOKEN_METADATA } from "@/lib/constants/mock-tok
 import { type Address } from "viem"
 import { TokenIcon } from "@/components/common/token-icon"
 
-
-// Simplified ABI for TokenFaucet
-const FAUCET_ABI = [
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "tokenIndex",
-        type: "uint256"
-      }
-    ],
-    name: "claimTokens",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
-    inputs: [],
-    name: "claimAllTokens",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
-    inputs: [],
-    name: "getTokensCount",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256"
-      }
-    ],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256"
-      }
-    ],
-    name: "getTokenInfo",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "address",
-            name: "tokenAddress",
-            type: "address"
-          },
-          {
-            internalType: "string",
-            name: "symbol",
-            type: "string"
-          },
-          {
-            internalType: "uint256",
-            name: "claimAmount",
-            type: "uint256"
-          },
-          {
-            internalType: "uint256",
-            name: "decimals",
-            type: "uint256"
-          }
-        ],
-        internalType: "struct TokenFaucet.TokenInfo",
-        name: "",
-        type: "tuple"
-      }
-    ],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address"
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256"
-      }
-    ],
-    name: "canClaim",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool"
-      }
-    ],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address"
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256"
-      }
-    ],
-    name: "getRemainingCooldown",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256"
-      }
-    ],
-    stateMutability: "view",
-    type: "function"
-  }
-] as const
-
 // Token metadata interface
 interface TokenInfo {
   symbol: string
@@ -213,7 +86,6 @@ export function FaucetCard() {
     mDAIBalance.data?.value,
   ])
 
-  
   const handleClaimToken = async (tokenIndex: number) => {
     if (!isConnected || !address) return
 
@@ -376,6 +248,7 @@ export function FaucetCard() {
         </p>
       </div>
 
+  
       {/* Token Cards */}
       <div className="space-y-4 mb-6">
         {tokenList.map((token, index) => {
