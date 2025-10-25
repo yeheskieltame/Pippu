@@ -111,12 +111,33 @@ export async function generateMetadata(): Promise<Metadata> {
         "name": "Pippu - DeFi Lending Protocol",
         "description": "Cute and friendly DeFi lending protocol on Base. Supply assets and earn interest, or borrow against your collateral.",
         "url": baseUrl,
-        "logo": `${baseUrl}/icon.png`,
+        "logo": [
+          {
+            "@type": "ImageObject",
+            "url": `${baseUrl}/logo.png`,
+            "width": 400,
+            "height": 400,
+            "caption": "Pippu - DeFi Lending Protocol Logo"
+          },
+          {
+            "@type": "ImageObject",
+            "url": `${baseUrl}/icon.png`,
+            "width": 512,
+            "height": 512,
+            "caption": "Pippu Icon"
+          }
+        ],
         "image": `${baseUrl}/og-image.png`,
         "provider": {
           "@type": "Organization",
           "name": "Pippu Team",
-          "url": baseUrl
+          "url": baseUrl,
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${baseUrl}/logo.png`,
+            "width": 400,
+            "height": 400
+          }
         },
         "serviceType": "DeFi Lending and Borrowing",
         "areaServed": "Worldwide",
@@ -142,6 +163,31 @@ export async function generateMetadata(): Promise<Metadata> {
             "value": "Supply, Borrow, Earn Interest"
           }
         ]
+      }),
+      // Organization structured data
+      'organization/ld+json': JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Pippu",
+        "alternateName": "Pippu DeFi",
+        "url": baseUrl,
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${baseUrl}/logo.png`,
+          "width": 400,
+          "height": 400
+        },
+        "description": "Cute and friendly DeFi lending protocol on Base chain",
+        "sameAs": [
+          // Add your social media links here
+          // "https://twitter.com/PippuDeFi",
+          // "https://github.com/PippuDeFi",
+          // "https://discord.gg/pippu"
+        ],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer service"
+        }
       })
     },
   }
