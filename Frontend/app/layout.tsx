@@ -90,7 +90,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     verification: {
-      google: "your-google-verification-code",
+      google: "IY8Xb4_eoQKRocnBkwp5APtE3iaI7p8TG_yjCC7i5JE",
     },
     other: {
       'fc:frame': JSON.stringify({
