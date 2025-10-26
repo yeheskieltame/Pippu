@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAccount, useWriteContract } from "wagmi"
-import { useBalance } from "wagmi"
+import { useReadContract } from "wagmi"
 import { formatTokenAmount } from "@/lib/utils"
 import { MOCK_TOKEN_CONFIG, MOCK_TOKEN_METADATA } from "@/lib/constants/mock-tokens"
 import { type Address } from "viem"
@@ -40,20 +40,104 @@ export function FaucetCard() {
 
   const { writeContract: mintTokens } = useWriteContract()
 
-  // Read token info for each token using known mock token addresses
-  const mWETHBalance = useBalance({
+  // Read token balances for each token using useReadContract (the working approach)
+  const mWETHBalance = useReadContract({
     address: MOCK_TOKEN_CONFIG.mWETH,
-    query: { enabled: isConnected && mounted }
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "account",
+            type: "address"
+          }
+        ],
+        name: "balanceOf",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256"
+          }
+        ],
+        stateMutability: "view",
+        type: "function"
+      }
+    ],
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isConnected && !!address && mounted,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 3
+    }
   })
 
-  const mUSDCBalance = useBalance({
+  const mUSDCBalance = useReadContract({
     address: MOCK_TOKEN_CONFIG.mUSDC,
-    query: { enabled: isConnected && mounted }
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "account",
+            type: "address"
+          }
+        ],
+        name: "balanceOf",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256"
+          }
+        ],
+        stateMutability: "view",
+        type: "function"
+      }
+    ],
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isConnected && !!address && mounted,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 3
+    }
   })
 
-  const mDAIBalance = useBalance({
+  const mDAIBalance = useReadContract({
     address: MOCK_TOKEN_CONFIG.mDAI,
-    query: { enabled: isConnected && mounted }
+    abi: [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "account",
+            type: "address"
+          }
+        ],
+        name: "balanceOf",
+        outputs: [
+          {
+            internalType: "uint256",
+            name: "",
+            type: "uint256"
+          }
+        ],
+        stateMutability: "view",
+        type: "function"
+      }
+    ],
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: isConnected && !!address && mounted,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 3
+    }
   })
 
   // Build token states from all queries
@@ -63,17 +147,17 @@ export function FaucetCard() {
         {
           canClaim: true, // Always can claim since using publicMint
           remainingCooldown: 0,
-          balance: mWETHBalance.data?.value || BigInt(0),
+          balance: mWETHBalance.data || BigInt(0),
         },
         {
           canClaim: true,
           remainingCooldown: 0,
-          balance: mUSDCBalance.data?.value || BigInt(0),
+          balance: mUSDCBalance.data || BigInt(0),
         },
         {
           canClaim: true,
           remainingCooldown: 0,
-          balance: mDAIBalance.data?.value || BigInt(0),
+          balance: mDAIBalance.data || BigInt(0),
         },
       ]
       setTokenStates(states)
@@ -81,9 +165,9 @@ export function FaucetCard() {
   }, [
     isConnected,
     mounted,
-    mWETHBalance.data?.value,
-    mUSDCBalance.data?.value,
-    mDAIBalance.data?.value,
+    mWETHBalance.data,
+    mUSDCBalance.data,
+    mDAIBalance.data,
   ])
 
   const handleClaimToken = async (tokenIndex: number) => {
